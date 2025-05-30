@@ -1,0 +1,9 @@
+This file is just meant to preserve the directory structure in the Git repository.
+
+WINDOWS/MSVC:
+For the purposes of this project and to build the game, you need to extract the
+/lib/ folder of a SDL3 release into this directory, making sure that there are
+3 folders with a SDL3.lib and SDL3.dll inside of them. The names of those folders are:
+	- arm64/
+	- x64/
+	- x86/

@@ -1,0 +1,4 @@
+This file is just meant to preserve the directory structure in the Git repository.
+
+This directory stores any assets that the game will use.
+When the game is shipped, we'll copy this folder into the root directory of the game folder.

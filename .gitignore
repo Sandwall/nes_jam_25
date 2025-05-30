@@ -1,0 +1,14 @@
+.vs/
+.vscode/
+*.user
+
+bin/
+
+*/obj/
+lib/*
+!lib/README
+
+*.exe
+*.dll
+*.lib
+*.obj
