@@ -7,9 +7,19 @@
 #include <math.h>
 #include <tinydef.hpp>
 
+#include <iostream> //testing to console
+
+float jumpTime = 0.0f;
+const float GRAVITY = 3.0f;
+
 constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
 
 Uint64 targetFps = 60;
+
+InputAction::Type inputAction;
+
+bool isGrounded = false;
+bool isJumping = false;
 
 Uint64 target_ns() {
 	if (targetFps == 0) return 0;
@@ -41,8 +51,34 @@ int main(int argc, char** argv) {
 			case SDL_EVENT_QUIT:
 				windowStaysAlive = false;
 				break;
+				
+			// Key press events
 			case SDL_EVENT_KEY_DOWN:
+				if (event.key.scancode == SDL_SCANCODE_LEFT)
+				{
+					inputAction = InputAction::LEFT;
+				}
+
+				if (event.key.scancode == SDL_SCANCODE_RIGHT)
+				{
+					inputAction = InputAction::RIGHT;
+				}
+
+				if (event.key.scancode == SDL_SCANCODE_SPACE)
+				{
+					if (!isJumping && isGrounded)
+					{
+						isJumping = true;
+						isGrounded = false;
+					}
+				}
+
+				break;
+
 			case SDL_EVENT_KEY_UP:
+				inputAction = InputAction::NONE;
+				break;
+
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			case SDL_EVENT_MOUSE_BUTTON_UP:
 			case SDL_EVENT_MOUSE_MOTION:
@@ -73,22 +109,81 @@ int main(int argc, char** argv) {
 		gfx.clearColor = Gfx::hsv_to_col(hsvTimer, 0.2f, 1.0f, 1.0f);
 
 		// bounding the rectangle around like the DVD logo
-		rectPos.x += rectVelocityX * deltaTime;
-		rectPos.y += rectVelocityY * deltaTime;
+		//rectPos.x += rectVelocityX * deltaTime;
+		//rectPos.y += rectVelocityY * deltaTime;
+
+		// If the player is at the center of the window and isn't jumping anymore
+		if (rectPos.y >= 200.0f / 2.0f && !isJumping)
+		{
+			isGrounded = true; // Land on ground by setting this to true
+		}
+
+		// If isn't jumping nor on ground, fall down
+		if (!isJumping && !isGrounded)
+		{
+			rectPos.y += rectVelocityY * GRAVITY * deltaTime;
+		}
+
+		// If isn't jumping but IS on ground, don't go up or down
+		else if (!isJumping && isGrounded)
+		{
+			jumpTime = 0.0f;
+			rectPos.y += 0.0f;
+		}
+
+		// Start jumping once off the ground
+		else if (isJumping && !isGrounded)
+		{
+			jumpTime += deltaTime;
+
+			// Make sure to jump during the jump time
+			if (jumpTime >= 0.0f && jumpTime < 3.0f)
+			{ 
+				jumpTime += deltaTime;
+				rectPos.y -= rectVelocityY * deltaTime; 
+			}
+
+			// Fall down
+			else if (jumpTime >= 3.0f)
+			{
+				jumpTime = 0.0f;
+				isJumping = false;
+			}
+		}
+
+		// Movement
+		switch (inputAction)
+		{
+		case InputAction::LEFT:
+			rectPos.x -= rectVelocityX * deltaTime;
+			break;
+
+		case InputAction::RIGHT:
+			rectPos.x += rectVelocityX * deltaTime;
+			break;
+
+		case InputAction::NONE:
+			rectPos.x += 0.0f;
+			break;
+
+		default:
+			break;
+		} // End movement input
+
 		if (rectPos.x + rectPos.w > static_cast<float>(Gfx::nesWidth)) {
 			rectPos.x = static_cast<float>(Gfx::nesWidth) - rectPos.w;
-			rectVelocityX = -rectVelocityX;
+			//rectVelocityX = -rectVelocityX;
 		} else if (rectPos.x < 0.0f) {
 			rectPos.x = 0.0f;
-			rectVelocityX = -rectVelocityX;
+			//rectVelocityX = -rectVelocityX;
 		}
 		
 		if (rectPos.y + rectPos.h > static_cast<float>(Gfx::nesHeight)) {
 			rectPos.y = static_cast<float>(Gfx::nesHeight) - rectPos.h;
-			rectVelocityY = -rectVelocityY;
+			//rectVelocityY = -rectVelocityY;
 		} else if (rectPos.y < 0.0f) {
 			rectPos.y = 0.0f;
-			rectVelocityY = -rectVelocityY;
+			//rectVelocityY = -rectVelocityY;
 		}
 
 		//
