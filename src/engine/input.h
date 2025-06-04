@@ -29,6 +29,8 @@ struct InputAction {
 	bool released() const;
 };
 
+/* Input - Holds all of the input data for the game
+ */
 struct Input {
 	InputAction up, left, down, right;
 	InputAction a, b;

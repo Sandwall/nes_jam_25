@@ -46,13 +46,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\$(Platform)-$(Configuration)\obj\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\$(Platform)-$(Configuration)\obj\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -90,13 +90,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\gfx.cpp" />
-    <ClCompile Include="src\input.cpp" />
+    <ClCompile Include="src\engine\gfx.cpp" />
+    <ClCompile Include="src\engine\input.cpp" />
+    <ClCompile Include="src\engine\libs.cpp" />
+    <ClCompile Include="src\engine\texture.cpp" />
+    <ClCompile Include="src\game\collision.cpp" />
+    <ClCompile Include="src\game\player.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\gfx.h" />
-    <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\engine\game_context.h" />
+    <ClInclude Include="src\engine\gfx.h" />
+    <ClInclude Include="src\engine\input.h" />
+    <ClInclude Include="src\engine\texture.h" />
+    <ClInclude Include="src\game\collision.h" />
+    <ClInclude Include="src\game\player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

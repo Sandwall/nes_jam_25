@@ -35,11 +35,17 @@ void Input::end_frame() {
 	start.end_frame();
 }
 
+//
 void Input::handle_events(const SDL_Event& event) {
 	switch (event.type) {
 		case SDL_EVENT_KEY_DOWN:
+
 			break;
 		case SDL_EVENT_KEY_UP:
+			break;
+
+// not handling mouse/gamepad for now...
+/*
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		case SDL_EVENT_MOUSE_BUTTON_UP:
 		case SDL_EVENT_MOUSE_MOTION:
@@ -47,5 +53,6 @@ void Input::handle_events(const SDL_Event& event) {
 		case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 		case SDL_EVENT_GAMEPAD_BUTTON_UP:
 			break;
+*/
 	}
 }

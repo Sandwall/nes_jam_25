@@ -34,7 +34,6 @@ struct AttributedVertex {
 
 constexpr int FOUR_MEGS = 1024 * 1024 * 4;
 
-
 Gfx::Gfx(SDL_Window* window)
 	: windowPtr(window) {}
 
@@ -57,6 +56,9 @@ bool Gfx::init() {
 	// init textures
 	{
 		SDL_GPUTextureCreateInfo ciTextureAtlas = {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT,
+			.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER,
 			.width = 4096,
 			.height = 4096,
 			.num_levels = 0,
@@ -64,11 +66,40 @@ bool Gfx::init() {
 		}; textureAtlas = SDL_CreateGPUTexture(device, &ciTextureAtlas);
 
 		SDL_GPUTextureCreateInfo ciTextureScreen1 = {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,    // if we get an error here, we may want to OR SDL_GPU_TEXTUREUSAGE_SAMPLER
 			.width = nesWidth,
 			.height = nesHeight,
 			.num_levels = 0,
 			.sample_count = SDL_GPU_SAMPLECOUNT_1,
 		}; textureScreen1 = SDL_CreateGPUTexture(device, &ciTextureScreen1);
+
+		SDL_GPUTextureCreateInfo ciDepthStencil = {
+			.type = SDL_GPU_TEXTURETYPE_2D,
+			.format = SDL_GPU_TEXTUREFORMAT_D16_UNORM,
+			.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET,
+			.width = nesWidth,
+			.height = nesHeight,
+			.num_levels = 0,
+			.sample_count = SDL_GPU_SAMPLECOUNT_1,
+		};
+
+		ctiObject = {
+			.texture = textureScreen1,
+			.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f },
+			.load_op = SDL_GPU_LOADOP_CLEAR,
+			.store_op = SDL_GPU_STOREOP_STORE
+		};
+
+		dstiObject = {
+			.texture = textureDepth,
+			.clear_depth = 0.0f,
+			.load_op = SDL_GPU_LOADOP_CLEAR,
+			.store_op = SDL_GPU_STOREOP_DONT_CARE,            // only care about depth during the render pass
+			.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
+			.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+			.clear_stencil = 0,
+		};
 
 		// Around this point, we probably want to build our texture atlas
 		// I'm not sure how we'll handle this, maybe we'll find some way to do it in aseprite
@@ -114,7 +145,6 @@ bool Gfx::init() {
 	}
 
 	// init pipelines
-
 	{
 		float x, y, depth;    // vertex position
 		float u, v;           // texture coord
@@ -165,6 +195,7 @@ bool Gfx::init() {
 			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
 		}; pipelineScreen1 = SDL_CreateGPUGraphicsPipeline(device, &ciPipelineScreen1);
 	}
+
 #else
 	//
 	// SDL_Renderer
@@ -235,27 +266,42 @@ void Gfx::begin_frame() {
 }
 
 void Gfx::finish_frame() {
-	int width = -1, height = -1;
-	SDL_GetWindowSize(windowPtr, &width, &height);
-
 #ifndef USE_SDL_RENDERER
 	//
 	// SDL GPU
 	//
 	SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(device);
-	SDL_GPUColorTargetInfo ctiObject = {
-		.texture = textureScreen1,
+
+	// render to nes target
+	SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(commandBuffer, &ctiObject, 1, &dstiObject);
+
+	SDL_EndGPURenderPass(renderPass);
+
+	// render nes target to swapchain
+	SDL_GPUTexture* textureSwapchain = nullptr;
+	Uint32 width = -1, height = -1;
+	if (!SDL_WaitAndAcquireGPUSwapchainTexture(commandBuffer, windowPtr, &textureSwapchain, &width, &height)) {
+		fprintf(stderr, "Could not acquire swapchain texture!\n");
+		return;
+	}
+
+	ctiScreen1 = {
+		.texture = textureSwapchain,
 		.clear_color = { 0.0f, 0.0f, 0.0f, 1.0f },
 		.load_op = SDL_GPU_LOADOP_CLEAR,
 		.store_op = SDL_GPU_STOREOP_STORE
 	};
 
-	// render to nes target
-	//SDL_BeginGPURenderPass(commandBuffer, &ctiObject, 1,)
-
 	// render to window swapchain
+	renderPass = SDL_BeginGPURenderPass(commandBuffer, &ctiScreen1, 1, nullptr);
+
+	SDL_EndGPURenderPass(renderPass);
+
+	SDL_SubmitGPUCommandBuffer(commandBuffer);
 
 #else
+	int width = -1, height = -1;
+	SDL_GetWindowSize(windowPtr, &width, &height);
 
 	// SDL_Renderer
 	SDL_SetRenderTarget(renderer, nullptr);
@@ -284,15 +330,21 @@ void Gfx::finish_frame() {
 
 }
 
-void Gfx::queue_rect(const SDL_FRect& dest, const SDL_FRect& src, const SDL_FColor& color) {
+void Gfx::queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color) {
+#ifndef USE_SDL_RENDERER
+#else
 	SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
 	SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
 	SDL_RenderTexture(renderer, textureAtlas, &src, &dest);
+#endif
 }
 
-void Gfx::queue_rect(const SDL_FRect& dest, const SDL_FColor& color) {
+void Gfx::queue_rect(SDL_FRect dest, const SDL_FColor& color) {
+#ifndef USE_SDL_RENDERER
+#else
 	SDL_SetRenderDrawColorFloat(renderer, EXPAND_COL(color));
 	SDL_RenderFillRect(renderer, &dest);
+#endif
 }
 
 /*

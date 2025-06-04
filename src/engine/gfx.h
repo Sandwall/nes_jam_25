@@ -21,6 +21,7 @@ class Gfx {
 
 	SDL_GPUTexture* textureAtlas = nullptr;
 	SDL_GPUTexture* textureScreen1 = nullptr;
+	SDL_GPUTexture* textureDepth = nullptr;
 
 	SDL_GPUShader* vertShaderObject  = nullptr;
 	SDL_GPUShader* fragShaderObject  = nullptr;
@@ -34,6 +35,10 @@ class Gfx {
 
 	SDL_GPUGraphicsPipeline* pipelineObject = nullptr;
 	SDL_GPUGraphicsPipeline* pipelineScreen1 = nullptr;
+
+	SDL_GPUColorTargetInfo ctiObject;
+	SDL_GPUDepthStencilTargetInfo dstiObject;
+	SDL_GPUColorTargetInfo ctiScreen1;
 #else
 	// SDL_Renderer
 	SDL_Renderer* renderer = nullptr;
@@ -51,9 +56,10 @@ public:
 	void cleanup();
 
 	SDL_FColor clearColor = { 0.0f, 0.0f, 0.5f, 1.0f };
+	SDL_Rect camera = { 0, 0, nesWidth, nesHeight };
 	
-	void queue_rect(const SDL_FRect& dest, const SDL_FRect& src, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
-	void queue_rect(const SDL_FRect& dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_rect(SDL_FRect dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
 	// these are commented because the compiler has trouble with overloads if you omit the color argument
 
