@@ -4,6 +4,7 @@
 #include <stb_rect_pack.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <mems.hpp>
 
 void TextureAtlas::create(int w, int h) {
@@ -12,7 +13,7 @@ void TextureAtlas::create(int w, int h) {
 	nSubtextures = 0;
 
 	data = malloc(width * height * NUM_CHANNELS);
-	
+	isPacked = false;
 }
 
 void TextureAtlas::destroy() {
@@ -22,12 +23,16 @@ void TextureAtlas::destroy() {
 
 	free(data);
 	data = 0;
+	isPacked = false;
 }
 
 // assumes that mems::init() has been called, as the scratch arena is used
 // we'll also impose a 10mb texture size limit
 // (assuming uncompressed 4-channel color, this is around a 1024x1024 image)
 uint32_t TextureAtlas::add_to_atlas(const char* path) {
+	if (isPacked)	// cannot add to an already packed atlas
+		return UINT32_MAX;
+
 	FILE* fp = fopen(path, "rb");
 	if (!fp) return INVALID_IDX;
 
@@ -53,7 +58,7 @@ uint32_t TextureAtlas::add_to_atlas(const char* path) {
 	fclose(fp);
 
 	// now we actually load the image
-	Subtexture subTex;
+	SubTexture subTex;
 	int requestedChannels;
 	subTex.data = static_cast<void*>(
 		stbi_load_from_memory(
@@ -64,12 +69,16 @@ uint32_t TextureAtlas::add_to_atlas(const char* path) {
 			&requestedChannels, NUM_CHANNELS)
 		);
 
-	subtex[nSubtextures++] = subTex;
+	subTextures[nSubtextures++] = subTex;
 
 	// scratchScope goes out of scope so all scratch arena memory from this function is freed
 }
 
+// this function packs the rects into the atlas and frees the subtextures on the CPU-side
 void TextureAtlas::pack_atlas() {
+	if (isPacked)
+		return;
+
 	mems::Arena& scratch = mems::get_scratch();
 	mems::ArenaScope scratchScope(scratch);
 
@@ -77,14 +86,53 @@ void TextureAtlas::pack_atlas() {
 	stbrp_node* rpNodes = static_cast<stbrp_node*>(scratch.push(sizeof(stbrp_node) * width));
 	stbrp_init_target(&rpContext, width, height, rpNodes, width);
 
-	for (int i = 0; i < nSubtextures; i++) {
-		rpNodes[i].x = 
-	}
 	stbrp_rect* rpRects = static_cast<stbrp_rect*>(scratch.push(sizeof(stbrp_rect) * nSubtextures));
 	for (int i = 0; i < nSubtextures; i++) {
 		// to correlate the rects to their textures
 		rpRects->id = i;
+
+		rpRects->x = 0;
+		rpRects->y = 0;
+		rpRects->w = subTextures[i].width;
+		rpRects->h = subTextures[i].height;
 	}
 
 	stbrp_pack_rects(&rpContext, rpRects, nSubtextures);
+
+	int rectsNotPacked = 0;
+	for (int i = 0; i < nSubtextures; i++) {
+		const stbrp_rect& rect = rpRects[i];
+		SubTexture& cSubtex = subTextures[rect.id];
+
+		if (0 != rect.was_packed) {
+			cSubtex.x = rect.x;
+			cSubtex.y = rect.y;
+			cSubtex.width = rect.w;
+			cSubtex.height = rect.h;
+
+			_move_subtex_to_atlas(rect.id, rect.x, rect.y);
+		} else {
+			rectsNotPacked++;
+		}
+
+	}
+
+	isPacked = true;
+}
+
+// copies subtex at idx to the main atlas data, at the destination rectangle with the top left position (x,y)
+void TextureAtlas::_move_subtex_to_atlas(int idx, int x, int y) {
+	SubTexture& subtex = subTextures[idx];
+
+	// each subtexture was loaded with 4 channels, which the same way as
+	// the actual texture data will be interpreted by the gpu,
+	// so we can just memcpy each horizontal line of pixels onto the atlas
+	for (int i = 0; i < subtex.height; i++) {
+		uint32_t* src = static_cast<uint32_t*>(subtex.data) + (subtex.width * i);
+		uint32_t* dst = static_cast<uint32_t*>(data) + x + ((i+y) * width);
+		memcpy(dst, src, NUM_CHANNELS * subtex.width);
+	}
+
+	stbi_image_free(subtex.data);
+	subtex.data = nullptr;
 }

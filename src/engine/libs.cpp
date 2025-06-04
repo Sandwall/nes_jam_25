@@ -3,6 +3,8 @@
 #include <stb_image.h>
 #include <stb_rect_pack.h>
 
+#include <simdjson.cpp>
+
 #define MEMS_IMPLEMENTATION
 #include <mems.hpp>
 

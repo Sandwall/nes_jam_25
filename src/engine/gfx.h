@@ -55,7 +55,7 @@ public:
 	bool init();
 	void cleanup();
 
-	SDL_FColor clearColor = { 0.0f, 0.0f, 0.5f, 1.0f };
+	SDL_FColor clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 	SDL_Rect camera = { 0, 0, nesWidth, nesHeight };
 	
 	void queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
