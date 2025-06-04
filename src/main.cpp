@@ -7,7 +7,7 @@
 #include <math.h>
 #include <tinydef.hpp>
 
-#include <iostream> //testing to console
+#include <stdio.h> // printing values
 
 float jumpTime = 0.0f;
 const float GRAVITY = 3.0f;
@@ -54,29 +54,105 @@ int main(int argc, char** argv) {
 				
 			// Key press events
 			case SDL_EVENT_KEY_DOWN:
-				if (event.key.scancode == SDL_SCANCODE_LEFT)
+				if (event.key.scancode == input.bindings[0])  // SDL_SCANCODE_UP
 				{
-					inputAction = InputAction::LEFT;
+					input.up.prevDown = false;
+					input.up.down = true;
 				}
 
-				if (event.key.scancode == SDL_SCANCODE_RIGHT)
+				if (event.key.scancode == input.bindings[1])  // SDL_SCANCODE_DOWN
 				{
-					inputAction = InputAction::RIGHT;
+					input.down.prevDown = false;
+					input.down.down = true;
 				}
 
-				if (event.key.scancode == SDL_SCANCODE_SPACE)
+				if (event.key.scancode == input.bindings[2])  // SDL_SCANCODE_LEFT
 				{
-					if (!isJumping && isGrounded)
-					{
-						isJumping = true;
-						isGrounded = false;
-					}
+					input.left.prevDown = false;
+					input.left.down = true;
+				}
+
+				if (event.key.scancode == input.bindings[3])  // SDL_SCANCODE_RIGHT
+				{
+					input.right.prevDown = false;
+					input.right.down = true;
+				}
+
+				if (event.key.scancode == input.bindings[4])  // SDL_SCANCODE_Z
+				{
+					input.b.prevDown = false;
+					input.b.down = true;
+				}
+
+				if (event.key.scancode == input.bindings[5])  // SDL_SCANCODE_X
+				{
+					input.a.prevDown = false;
+					input.a.down = true;
+				}
+
+				if (event.key.scancode == input.bindings[6])  // SDL_SCANCODE_RETURN
+				{
+					input.start.prevDown = false;
+					input.start.down = true;
+				}
+
+				if (event.key.scancode == input.bindings[7])  // SDL_SCANCODE_RSHIFT
+				{
+					input.select.prevDown = false;
+					input.select.down = true;
 				}
 
 				break;
 
 			case SDL_EVENT_KEY_UP:
-				inputAction = InputAction::NONE;
+				if (event.key.scancode == input.bindings[0]) // SDL_SCANCODE_UP
+				{
+					input.up.down = false;
+					input.up.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[1]) // SDL_SCANCODE_DOWN
+				{
+					input.down.down = false;
+					input.down.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[2]) // SDL_SCANCODE_LEFT
+				{
+					input.left.down = false;
+					input.left.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[3])  // SDL_SCANCODE_RIGHT
+				{
+					input.right.down = false;
+					input.right.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[4])  // SDL_SCANCODE_Z
+				{
+					input.b.down = false;
+					input.b.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[5])  // SDL_SCANCODE_X
+				{
+					input.a.down = false;
+					input.a.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[6])  // SDL_SCANCODE_RETURN
+				{
+					input.start.down = false;
+					input.start.prevDown = true;
+				}
+
+				if (event.key.scancode == input.bindings[7])  // SDL_SCANCODE_RSHIFT
+				{
+					input.select.down = false;
+					input.select.prevDown = true;
+				}
+
 				break;
 
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -89,7 +165,7 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
-		
+
 		// skip frame if we get the signal to quit the window
 		if (!windowStaysAlive) break;
 
@@ -102,14 +178,49 @@ int main(int argc, char** argv) {
 		// just because this is a demonstration/test
 		static float hsvTimer = 0.0f;
 		static SDL_FRect rectPos = { 128.0f, 128.0f, 16.0f, 16.0f };
-		static float rectVelocityX = 60.0f, rectVelocityY = 30.0f;
+		static float rectVelocityX = 0.0f, rectVelocityY = 30.0f;
+
+		// If left is clicked, move left
+		if (input.left.clicked())
+		{
+			rectVelocityX = -60.0f;
+		}
+
+		// Else if left is released, don't move
+		else if (input.left.released())
+		{
+			rectVelocityX = 0.0f;
+		}
+
+		// If right is clicked, move right
+		if (input.right.clicked())
+		{
+			rectVelocityX = 60.0f;
+		}
+
+		// Else if right is released, don't move
+		else if (input.right.released())
+		{
+			rectVelocityX = 0.0f;
+		}
+
+		// If a is pressed, start jumping if is still on ground and hasn't jumped yet
+		if (input.a.clicked())
+		{
+			if (!isJumping && isGrounded)
+			{
+				isJumping = true;
+				isGrounded = false;
+			}
+		}
+
 
 		// modulate clear color according to hsv
 		hsvTimer = fmodf(hsvTimer + (deltaTime * 60.0f), 360.0f);
 		gfx.clearColor = Gfx::hsv_to_col(hsvTimer, 0.2f, 1.0f, 1.0f);
 
 		// bounding the rectangle around like the DVD logo
-		//rectPos.x += rectVelocityX * deltaTime;
+		rectPos.x += rectVelocityX * deltaTime;
 		//rectPos.y += rectVelocityY * deltaTime;
 
 		// If the player is at the center of the window and isn't jumping anymore
@@ -150,25 +261,6 @@ int main(int argc, char** argv) {
 				isJumping = false;
 			}
 		}
-
-		// Movement
-		switch (inputAction)
-		{
-		case InputAction::LEFT:
-			rectPos.x -= rectVelocityX * deltaTime;
-			break;
-
-		case InputAction::RIGHT:
-			rectPos.x += rectVelocityX * deltaTime;
-			break;
-
-		case InputAction::NONE:
-			rectPos.x += 0.0f;
-			break;
-
-		default:
-			break;
-		} // End movement input
 
 		if (rectPos.x + rectPos.w > static_cast<float>(Gfx::nesWidth)) {
 			rectPos.x = static_cast<float>(Gfx::nesWidth) - rectPos.w;
