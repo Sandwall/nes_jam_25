@@ -4,8 +4,7 @@
 
 struct InputAction {
 	enum Type {
-		NONE = 0,
-		UP,
+		UP = 0,
 		DOWN,
 		LEFT,
 		RIGHT,

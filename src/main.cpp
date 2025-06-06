@@ -2,10 +2,13 @@
 
 #include "input.h"
 #include "gfx.h"
+#include "GameObject.h"
 
 #include <stdio.h>
 #include <math.h>
 #include <tinydef.hpp>
+
+#include <array>
 
 #include <stdio.h> // printing values
 
@@ -35,6 +38,13 @@ int main(int argc, char** argv) {
 	Gfx gfx(window);
 	gfx.init();
 	SDL_ShowWindow(window);
+
+	// Vector of gameobjects
+	std::vector<GameObject> gameObjects;
+	gameObjects.resize(3); // For now, it's set to 3 elements
+
+	for (int i = 0; i < gameObjects.size(); i++)
+		gameObjects[i].initialize_game_object("Sprites/Black.png", window); // Load the same textures
 
 	Input input;
 	bool windowStaysAlive = true;
@@ -278,11 +288,37 @@ int main(int argc, char** argv) {
 			//rectVelocityY = -rectVelocityY;
 		}
 
+		// GameObjects position
+		static std::array<SDL_FRect, 3> gameObjectsPosition = 
+		{ 
+			SDL_FRect(10.0f, 10.0f, 16.0f, 16.0f), // x, y, width, height
+			SDL_FRect(50.0f, 50.0f, 16.0f, 16.0f), // x, y, width, height
+			SDL_FRect(100.0f, 100.0f, 16.0f, 16.0f) // x, y, width, height
+		}; 
+
+		static std::array<SDL_FColor, 3> gameObjectsColor =
+		{
+			SDL_FColor(1.0f, 0.0f, 0.0f, 1.0f), // red, green, blue, alpha
+			SDL_FColor(1.0f, 1.0f, 0.0f, 1.0f), // red, green, blue, alpha
+			SDL_FColor(0.0f, 0.0f, 1.0f, 1.0f) // red, green, blue, alpha
+		};
+
 		//
 		// render
 		//
 		input.end_frame();
 		gfx.begin_frame();
+
+		for (unsigned int i = 0; i < gameObjects.size(); i++)
+		{
+			for (unsigned int j = 0; j < gameObjectsPosition.size(); j++)
+			{
+				gameObjects[i].render_game_object(window, gameObjectsPosition[j], gameObjectsColor[j]);
+			}
+		}
+
+		gameObjects[0].collision_with_game_object(gameObjectsPosition[0], gameObjectsPosition[1]);
+
 		gfx.queue_rect(rectPos, SDL_FColor{1.0f, 0.0f, 1.0f, 1.0});
 
 		gfx.finish_frame();
@@ -300,6 +336,9 @@ int main(int argc, char** argv) {
 	}
 	
 	gfx.cleanup();
+
+	for (int i = 0; i < gameObjects.size(); i++) gameObjects[i].clean_game_object();
+
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 }
