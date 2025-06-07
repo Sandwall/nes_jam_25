@@ -91,32 +91,6 @@ namespace ttp {
 	concept Floating = SameAs<T, f32> || SameAs<T, f64>;
 }
 
-
-/*
-template <typename T>
-union T2 {
-	T v[2];
-	struct { T x, y; };
-};
-
-template <typename T>
-union T4 {
-	T v[4];
-	struct { T x, y, w, h; };
-	struct { T r, g, b, a; };
-	struct { T x0, y0, x1, y1; };
-};
-
-using Float2 = T2<f32>;
-using Vec2F = T2<f32>;
-using Vec2I = T2<i32>;
-
-using Float4 = T4<f32>;
-using RectF = T4<f32>;
-using ColorF = T4<f32>;
-using LineF = T4<f32>;
-*/
-
 #define VEC3_AXIS_X 1.0f, 0.0f, 0.0f
 #define VEC3_AXIS_Y 0.0f, 1.0f, 0.0f
 #define VEC3_AXIS_Z 0.0f, 0.0f, 1.0f
@@ -220,6 +194,7 @@ namespace tds {
 		}
 	};
 
+	// simple stack, uses stack-allocated memory
 	template<typename T, u32 Capacity>
 	struct Stack {
 		static constexpr u32 capacity = Capacity;
@@ -303,4 +278,29 @@ namespace tds {
 			}
 		}
 	};
+
+	template <typename T>
+	union T2 {
+		T v[2];
+		struct { T x, y; };
+	};
+
+	template <typename T>
+	union T4 {
+		T v[4];
+		struct { T x, y, w, h; };
+		struct { T r, g, b, a; };
+		struct { T x0, y0, x1, y1; };
+	};
+
+	/*
+	using Float2 = T2<f32>;
+	using Vec2F = T2<f32>;
+	using Vec2I = T2<i32>;
+
+	using Float4 = T4<f32>;
+	using RectF = T4<f32>;
+	using ColorF = T4<f32>;
+	using LineF = T4<f32>;
+	*/
 }

@@ -64,15 +64,13 @@ public:
 	void upload_atlas(const TextureAtlas& atlas);
 	void cleanup();
 
+	void queue_rect(SDL_FRect dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	// always draws text @ font height 8
 	void queue_text(int x, int y, const char* text, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
 	void queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect&, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	void queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect&, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
-
-	void queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
-	void queue_rect(SDL_FRect dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
 	// these are commented because the compiler has trouble with overloads if you omit the color argument
 

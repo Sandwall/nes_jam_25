@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 		//
 		// update
 		//
-
+		player.update(game);
 
 		//
 		// render
@@ -90,6 +90,7 @@ int main(int argc, char** argv) {
 		input.end_frame();
 		gfx.begin_frame();
 
+		player.render(gfx);
 		gfx.queue_text(16, 16, "NES Game Jam!");
 
 		gfx.finish_frame();

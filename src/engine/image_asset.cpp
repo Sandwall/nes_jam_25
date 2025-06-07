@@ -81,12 +81,12 @@ uint32_t TextureAtlas::add_to_atlas(const char* imagePath, const char* jsonPath)
 			&requestedChannels, NUM_CHANNELS)
 		);
 
-	subTextures[nSubtextures] = subTex;
-
 	if (jsonPath)
 		subTex.sheetData = SpriteSheet::load(jsonPath, arena);
 	else
 		subTex.sheetData = nullptr;
+
+	subTextures[nSubtextures] = subTex;
 
 	return nSubtextures++;
 	// scratchScope goes out of scope so all scratch arena memory from this function is freed
@@ -180,45 +180,47 @@ using namespace simdjson;
 SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	SpriteSheet* sheet = static_cast<SpriteSheet*>(arena.push_zero(sizeof(SpriteSheet)));
 
-	// TODO(sand): simdjson crashes here
 	ondemand::parser parser;
 	padded_string json = padded_string::load(jsonPath);
-	ondemand::document sheetDoc = parser.iterate(jsonPath);
+	ondemand::document sheetDoc = parser.iterate(json);
 
 	// load source frame rects
 	auto framesVal = sheetDoc["frames"].get_array();
 	sheet->nFrames = framesVal.count_elements();
 	sheet->frames = static_cast<AnimationFrame*>(arena.push_zero(sizeof(AnimationFrame*) * sheet->nFrames));
+	int i = 0;    // simdjson's ondemand API with regards to array iteration does not give us the index,
+	              // so we need to manually keep track of it
 
-	for (int i = 0; i < sheet->nFrames; i++) {
-		auto frameData = framesVal.at(i);
+	for (auto frameData : framesVal) {
 		auto frameRect = frameData["frame"];
-		sheet->frames[i].source.x = frameRect["x"];
-		sheet->frames[i].source.y = frameRect["y"];
-		sheet->frames[i].source.w = frameRect["w"];
-		sheet->frames[i].source.h = frameRect["h"];
+		sheet->frames[i].source.x = static_cast<int>(frameRect["x"]);
+		sheet->frames[i].source.y = static_cast<int>(frameRect["y"]);
+		sheet->frames[i].source.w = static_cast<int>(frameRect["w"]);
+		sheet->frames[i].source.h = static_cast<int>(frameRect["h"]);
 		sheet->frames[i].duration = static_cast<float>(frameData["duration"]) / 1000.0f;
+		i++;
 	}
 
+	i = 0;
 	auto frameTags = sheetDoc["meta"]["frameTags"];
 	sheet->nAnimations = frameTags.count_elements();
 	sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta*) * sheet->nAnimations));
 
-	for (int i = 0; i < sheet->nAnimations; i++) {
-		auto frameTag = frameTags.at(i);
-		sheet->anims[i].startFrame = frameTag["from"];
-		sheet->anims[i].endFrame = frameTag["to"];
+	for (auto frameTag : frameTags) {
+		sheet->anims[i].startFrame = static_cast<int>(frameTag["from"]);
+		sheet->anims[i].endFrame =   static_cast<int>(frameTag["to"]);
+		sheet->anims[i].type = AnimationMeta::FORWARD;
 
 		const auto& dirStr = frameTag["direction"].get_string().value();
-		if ("forward" == dirStr) {
-			sheet->anims[i].type = AnimationMeta::FORWARD;
-		} else if ("pingpong" == dirStr) {
+		
+		// don't need to check against "forward" since we're assuming it by default
+		if (0 == dirStr.compare("pingpong")) {
 			sheet->anims[i].type = AnimationMeta::PINGPONG;
-		} else if ("backward" == dirStr) {
+		} else if (0 == dirStr.compare("backward")) {
 			sheet->anims[i].type = AnimationMeta::BACKWARD;
-		} else {
-			sheet->anims[i].type = AnimationMeta::FORWARD;
 		}
+
+		i++;
 	}
 
 	return sheet;

@@ -218,7 +218,11 @@ bool Gfx::init(SDL_Window* window) {
 void Gfx::upload_atlas(const TextureAtlas& atlas) {
 	spriteAtlas = &atlas;
 
-	textureAtlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, atlas.width, atlas.height);
+	// for some reason each pixel is loaded with the endianness swapped
+	// maybe we're doing something wrong in the TextureAtlas image loading code?
+	// NOTE(sand): setting the pixelformat to ABGR instead of RGBA interprets the pixels properly
+	textureAtlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC, atlas.width, atlas.height);
+
 	SDL_UpdateTexture(textureAtlas, nullptr, atlas.data, atlas.width * TextureAtlas::NUM_CHANNELS);
 
 	SDL_SetTextureBlendMode(textureAtlas, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
@@ -336,15 +340,6 @@ void Gfx::finish_frame() {
 
 }
 
-void Gfx::queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color) {
-#ifndef USE_SDL_RENDERER
-#else
-	SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
-	SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
-	SDL_RenderTexture(renderer, textureAtlas, &src, &dest);
-#endif
-}
-
 void Gfx::queue_rect(SDL_FRect dest, const SDL_FColor& color) {
 #ifndef USE_SDL_RENDERER
 #else
@@ -379,8 +374,8 @@ void Gfx::queue_text(int x, int y, const char* text, const SDL_FColor& color) {
 }
 
 void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
-	SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
-	SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
+	//SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
+	//SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
 
 	SDL_FRect dest = {
 		static_cast<float>(x),
@@ -404,7 +399,7 @@ void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& s
 
 
 void Gfx::queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
-	queue_sprite(x, y, spriteAtlas->subTextures[fontIdx], src, useCamera, color);
+	queue_sprite(x, y, spriteAtlas->subTextures[spriteIdx], src, useCamera, color);
 }
 
 /*

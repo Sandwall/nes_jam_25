@@ -1,22 +1,18 @@
-// raddbg 0.9.18 project file
+// raddbg 0.9.19 project file
 
 recent_file: path: "src/main.cpp"
+recent_file: path: "src/game/player.cpp"
 recent_file: path: "src/engine/game_context.h"
 recent_file: path: "src/engine/texture.h"
 recent_file: path: "src/engine/texture.cpp"
-breakpoint:
-{
-  source_location: "src/main.cpp:33:1"
-  hit_count: 0
-}
 target:
 {
   executable: "bin/x64-Debug/nes_game.exe"
-  working_directory: res
+  working_directory: ""
   enabled: 1
 }
 breakpoint:
 {
-  source_location: "src/main.cpp:27:1"
-  hit_count: 0
+  source_location: "src/main.cpp:52:1"
+  hit_count: 1
 }

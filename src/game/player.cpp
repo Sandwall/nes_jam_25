@@ -9,6 +9,7 @@ void Player::load(TextureAtlas& atlas) {
 	animator.init();
 
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
+	assert(sheet);
 }
 
 void Player::update(const GameContext& ctx) {
