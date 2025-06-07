@@ -5,6 +5,8 @@
 #include "engine/game_context.h"
 #include "engine/image_asset.h"
 
+#include "game/player.h"
+
 #include <stdio.h>
 #include <math.h>
 
@@ -13,10 +15,18 @@
 
 constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
 
+Input input;
+Gfx gfx;
+TextureAtlas atlas;
+
 GameContext game = {
 	.delta = 1.0f / 60.0f,
 	.targetFps = 60,
+	.atlas = &atlas,
+	.input = &input,
 };
+
+Player player;
 
 int main(int argc, char** argv) {
 	if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD))
@@ -24,27 +34,20 @@ int main(int argc, char** argv) {
 
 	mems::init();
 
-	// create window
+	// create window and init graphics
 	game.window = SDL_CreateWindow("NES Game!", defWidth, defHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
 	SDL_SetWindowMinimumSize(game.window, Gfx::nesWidth * 2, Gfx::nesHeight * 2);
-	
-	// initiaize important game structures
-	Input input;
-	Gfx gfx(game.window);
-	
-	if (!gfx.init())
+	if (!gfx.init(game.window))
 		return -1;
 
-	TextureAtlas atlas;
+	// create atlas
 	atlas.create(1024, 1024);
+
 	gfx.fontIdx = atlas.add_to_atlas("./res/font.png");
+	player.load(atlas);
+
 	atlas.pack_atlas();
-
 	gfx.upload_atlas(atlas);
-
-	// store pointers to important game structures in GameContext
-	game.gfx = &gfx;
-	game.input = &input;
 
 	SDL_ShowWindow(game.window);
 	bool windowStaysAlive = true;
@@ -81,8 +84,6 @@ int main(int argc, char** argv) {
 		//
 
 
-
-
 		//
 		// render
 		//
@@ -107,10 +108,7 @@ int main(int argc, char** argv) {
 	
 	gfx.cleanup();
 	atlas.destroy();
-
 	SDL_DestroyWindow(game.window);
-
 	mems::close();
-
 	SDL_Quit();
 }

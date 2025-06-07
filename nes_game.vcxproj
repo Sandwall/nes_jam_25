@@ -105,6 +105,8 @@
     <ClInclude Include="src\engine\gfx.h" />
     <ClInclude Include="src\engine\input.h" />
     <ClInclude Include="src\engine\image_asset.h" />
+    <ClInclude Include="src\engine\nes_apu.hpp" />
+    <ClInclude Include="src\engine\nsf.hpp" />
     <ClInclude Include="src\game\collision.h" />
     <ClInclude Include="src\game\gameobject.h" />
     <ClInclude Include="src\game\level.h" />

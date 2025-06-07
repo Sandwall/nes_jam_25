@@ -20,10 +20,7 @@ struct GameContext {
 	}
 
 	SDL_Window* window;
-	Gfx* gfx;
-	TextureAtlas* textures;
-
+	TextureAtlas* atlas;
 	Input* input;
-
 	
 };

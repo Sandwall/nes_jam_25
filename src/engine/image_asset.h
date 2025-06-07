@@ -82,13 +82,16 @@ struct SpriteSheet {
 struct SpriteAnimator {
 	// this is the offset in the TextureAtlas for both SubTexture and SpriteSheet
 	uint32_t spriteIdx;
+	int animIdx;
 
 	// internal
 	float timer;
-	
-	// output
-	SDL_Rect current;
+	int currentFrame : (sizeof(int) - 1);
+	bool pingpongForward : 1 = true;
 
-	void start(bool resetAnim = true);
-	void update(float delta);
+	void init();
+	void start(int anim, const SpriteSheet& sheet);
+	void update(float delta, const SpriteSheet& sheet);
+	SDL_FRect current_framef(const SpriteSheet& sheet);
+	SDL_Rect current_frame(const SpriteSheet& sheet);
 };

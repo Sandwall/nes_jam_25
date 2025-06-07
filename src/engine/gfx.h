@@ -58,9 +58,9 @@ public:
 	SDL_FPoint cameraPos = { 0, 0 };
 	uint32_t fontIdx = UINT32_MAX;
 
-	Gfx(SDL_Window*);
+	Gfx();
 
-	bool init();
+	bool init(SDL_Window*);
 	void upload_atlas(const TextureAtlas& atlas);
 	void cleanup();
 

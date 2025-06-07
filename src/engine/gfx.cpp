@@ -36,8 +36,7 @@ struct AttributedVertex {
 
 constexpr int FOUR_MEGS = 1024 * 1024 * 4;
 
-Gfx::Gfx(SDL_Window* window)
-	: windowPtr(window) {}
+Gfx::Gfx() {}
 
 // NOTE(sand): Right now, we're just batching 6 vertices per quad (32 bytes per quad),
 // which means that given 4 megabytes of vertex buffer space the max number of sprites/quads,
@@ -45,7 +44,9 @@ Gfx::Gfx(SDL_Window* window)
 //
 // If we really want to take it to the next level, we can instance a single unit quad, and
 // upload a minified struct of around 12 bytes per quad, which will bring this 21845 much higher.
-bool Gfx::init() {
+bool Gfx::init(SDL_Window* window) {
+	windowPtr = window;
+
 #ifndef USE_SDL_RENDERER
 	//
 	// SDL_GPU

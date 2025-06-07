@@ -180,6 +180,7 @@ using namespace simdjson;
 SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	SpriteSheet* sheet = static_cast<SpriteSheet*>(arena.push_zero(sizeof(SpriteSheet)));
 
+	// TODO(sand): simdjson crashes here
 	ondemand::parser parser;
 	padded_string json = padded_string::load(jsonPath);
 	ondemand::document sheetDoc = parser.iterate(jsonPath);
@@ -221,4 +222,73 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	}
 
 	return sheet;
+}
+
+void SpriteAnimator::init() {
+	timer = 0.0f;
+	animIdx = 0;
+	currentFrame = 0;
+	pingpongForward = true;
+}
+
+void SpriteAnimator::start(int anim, const SpriteSheet& sheet) {
+	timer = 0.0f;
+	animIdx = anim;
+	pingpongForward = true;
+
+	const AnimationMeta& cAnimMeta = sheet.anims[animIdx];
+	currentFrame = cAnimMeta.startFrame;
+}
+
+void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
+	const AnimationMeta& cAnimMeta = sheet.anims[animIdx];
+	const AnimationFrame& cAnimFrame = sheet.frames[currentFrame];
+
+	timer += delta;
+	if (timer >= cAnimFrame.duration) {
+		timer = fmodf(timer, cAnimFrame.duration);
+		switch (cAnimMeta.type) {
+		case AnimationMeta::FORWARD: {
+			currentFrame++;
+			if (currentFrame > cAnimMeta.endFrame)
+				currentFrame = cAnimMeta.startFrame;
+			else if (currentFrame < cAnimMeta.startFrame)
+				currentFrame = cAnimMeta.startFrame;
+		} break;
+		case AnimationMeta::BACKWARD: {
+			currentFrame--;
+			if (currentFrame < cAnimMeta.startFrame)
+				currentFrame = cAnimMeta.endFrame;
+			else if (currentFrame > cAnimMeta.endFrame)
+				currentFrame = cAnimMeta.endFrame;
+		} break;
+		case AnimationMeta::PINGPONG: {
+			if (pingpongForward) {
+				currentFrame++;
+				if (currentFrame > cAnimMeta.endFrame) {
+					currentFrame = cAnimMeta.startFrame;
+					pingpongForward = false;
+				} else if (currentFrame < cAnimMeta.startFrame)
+					currentFrame = cAnimMeta.startFrame;
+			} else {
+				currentFrame--;
+				if (currentFrame < cAnimMeta.startFrame) {
+					currentFrame = cAnimMeta.endFrame;
+					pingpongForward = false;
+				} else if (currentFrame > cAnimMeta.endFrame)
+					currentFrame = cAnimMeta.endFrame;
+			}
+		} break;
+		}
+	}
+}
+
+SDL_FRect SpriteAnimator::current_framef(const SpriteSheet& sheet) {
+	SDL_FRect fr;
+	SDL_RectToFRect(&sheet.frames[currentFrame].source, &fr);
+	return fr;
+}
+
+SDL_Rect SpriteAnimator::current_frame(const SpriteSheet& sheet) {
+	return sheet.frames[currentFrame].source;
 }
