@@ -32,21 +32,29 @@ struct InputAction {
 /* Input - Holds all of the input data for the game
  */
 struct Input {
-	InputAction up, left, down, right;
-	InputAction a, b;
-	InputAction select, start;
+	Input();
 
-	SDL_Scancode bindings[InputAction::MAX] = {
-		SDL_SCANCODE_UP,
-		SDL_SCANCODE_DOWN,
-		SDL_SCANCODE_LEFT,
-		SDL_SCANCODE_RIGHT,
-		SDL_SCANCODE_Z,
-		SDL_SCANCODE_X,
-		SDL_SCANCODE_RETURN,
-		SDL_SCANCODE_RSHIFT
+	union {
+		struct {
+			InputAction up, left, down, right;
+			InputAction a, b;
+			InputAction select, start;
+		};
+
+		InputAction actions[8];
+	};
+
+	SDL_Scancode keyBindings[InputAction::MAX] = {
+		SDL_SCANCODE_UP,		// up
+		SDL_SCANCODE_DOWN,		// down
+		SDL_SCANCODE_LEFT,		// left
+		SDL_SCANCODE_RIGHT,		// right
+		SDL_SCANCODE_Z,			// a
+		SDL_SCANCODE_X,			// b
+		SDL_SCANCODE_RETURN,	// start
+		SDL_SCANCODE_RSHIFT		// select
 	};
 
 	void end_frame();
-	void handle_events(const SDL_Event& event);
+	void handle_event(const SDL_Event& event);
 };

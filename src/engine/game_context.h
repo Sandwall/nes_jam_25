@@ -4,7 +4,7 @@
 
 struct SDL_Window;
 
-struct Gfx;
+class Gfx;
 struct TextureAtlas;
 struct Input;
 
@@ -14,7 +14,7 @@ struct GameContext {
 
 	uint64_t targetFps;
 
-	uint64_t target_ns() {
+	uint64_t target_ns() const {
 		if (targetFps == 0) return 0;
 		return 1000000000LL / targetFps;
 	}

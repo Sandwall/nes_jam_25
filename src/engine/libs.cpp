@@ -1,5 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #define STB_IMAGE_IMPLEMENTATION
-#define STB_RECTPACK_IMPLEMENTATION
+#define STB_RECT_PACK_IMPLEMENTATION
 #include <stb_image.h>
 #include <stb_rect_pack.h>
 

@@ -93,8 +93,10 @@
     <ClCompile Include="src\engine\gfx.cpp" />
     <ClCompile Include="src\engine\input.cpp" />
     <ClCompile Include="src\engine\libs.cpp" />
-    <ClCompile Include="src\engine\texture.cpp" />
+    <ClCompile Include="src\engine\image_asset.cpp" />
     <ClCompile Include="src\game\collision.cpp" />
+    <ClCompile Include="src\game\gameobject.cpp" />
+    <ClCompile Include="src\game\level.cpp" />
     <ClCompile Include="src\game\player.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
@@ -102,8 +104,10 @@
     <ClInclude Include="src\engine\game_context.h" />
     <ClInclude Include="src\engine\gfx.h" />
     <ClInclude Include="src\engine\input.h" />
-    <ClInclude Include="src\engine\texture.h" />
+    <ClInclude Include="src\engine\image_asset.h" />
     <ClInclude Include="src\game\collision.h" />
+    <ClInclude Include="src\game\gameobject.h" />
+    <ClInclude Include="src\game\level.h" />
     <ClInclude Include="src\game\player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -9,6 +9,9 @@
 
 #define EXPAND_COL(col) col.r, col.g, col.b, col.a
 
+struct TextureAtlas;
+struct SubTexture;
+
 class Gfx {
 	SDL_Window* windowPtr = nullptr;
 
@@ -47,17 +50,27 @@ class Gfx {
 
 #endif
 
+	const TextureAtlas* spriteAtlas = nullptr;
+
 public:
 	static constexpr int nesWidth = 256, nesHeight = 240;
+	SDL_FColor clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+	SDL_FPoint cameraPos = { 0, 0 };
+	uint32_t fontIdx = UINT32_MAX;
 
 	Gfx(SDL_Window*);
 
 	bool init();
+	void upload_atlas(const TextureAtlas& atlas);
 	void cleanup();
 
-	SDL_FColor clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-	SDL_Rect camera = { 0, 0, nesWidth, nesHeight };
-	
+	// always draws text @ font height 8
+	void queue_text(int x, int y, const char* text, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+
+	void queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect&, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect&, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+
+
 	void queue_rect(SDL_FRect dest, const SDL_FRect& src, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	void queue_rect(SDL_FRect dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 

@@ -3,6 +3,7 @@
 #include "engine/input.h"
 #include "engine/gfx.h"
 #include "engine/game_context.h"
+#include "engine/image_asset.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -34,6 +35,13 @@ int main(int argc, char** argv) {
 	if (!gfx.init())
 		return -1;
 
+	TextureAtlas atlas;
+	atlas.create(1024, 1024);
+	gfx.fontIdx = atlas.add_to_atlas("./res/font.png");
+	atlas.pack_atlas();
+
+	gfx.upload_atlas(atlas);
+
 	// store pointers to important game structures in GameContext
 	game.gfx = &gfx;
 	game.input = &input;
@@ -60,7 +68,7 @@ int main(int argc, char** argv) {
 			case SDL_EVENT_GAMEPAD_AXIS_MOTION:
 			case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 			case SDL_EVENT_GAMEPAD_BUTTON_UP:
-				input.handle_events(event);
+				input.handle_event(event);
 				break;
 			}
 		}
@@ -81,6 +89,8 @@ int main(int argc, char** argv) {
 		input.end_frame();
 		gfx.begin_frame();
 
+		gfx.queue_text(16, 16, "NES Game Jam!");
+
 		gfx.finish_frame();
 		
 		// end frame - framelimiting logic
@@ -96,6 +106,8 @@ int main(int argc, char** argv) {
 	}
 	
 	gfx.cleanup();
+	atlas.destroy();
+
 	SDL_DestroyWindow(game.window);
 
 	mems::close();

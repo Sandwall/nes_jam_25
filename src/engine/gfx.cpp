@@ -6,6 +6,8 @@
 
 #include <tinydef.hpp>
 
+#include "engine/image_asset.h"
+
 #pragma warning (disable : 4101)
 
 // NOTE(sand): This is a struct that represents a single vertex
@@ -201,25 +203,25 @@ bool Gfx::init() {
 	// SDL_Renderer
 	//
 	renderer = SDL_CreateRenderer(windowPtr, nullptr);
-
-	SDL_Surface* surfaceAtlas = SDL_CreateSurface(4096, 4096, SDL_PIXELFORMAT_RGBA8888);
-	// load texture into surface atlas
-
-	textureAtlas = SDL_CreateTextureFromSurface(renderer, surfaceAtlas);
-	SDL_DestroySurface(surfaceAtlas);
-
-	textureScreen1 = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, nesWidth, nesHeight);
-
-	SDL_SetTextureBlendMode(textureAtlas, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
-	SDL_SetTextureBlendMode(textureScreen1, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
 
-	SDL_SetTextureScaleMode(textureAtlas, SDL_SCALEMODE_NEAREST);
+	textureScreen1 = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, nesWidth, nesHeight);
+	SDL_SetTextureBlendMode(textureScreen1, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
 	SDL_SetTextureScaleMode(textureScreen1, SDL_SCALEMODE_NEAREST);
 
 #endif
 
 	return true;
+}
+
+void Gfx::upload_atlas(const TextureAtlas& atlas) {
+	spriteAtlas = &atlas;
+
+	textureAtlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, atlas.width, atlas.height);
+	SDL_UpdateTexture(textureAtlas, nullptr, atlas.data, atlas.width * TextureAtlas::NUM_CHANNELS);
+
+	SDL_SetTextureBlendMode(textureAtlas, SDL_BLENDMODE_BLEND_PREMULTIPLIED);
+	SDL_SetTextureScaleMode(textureAtlas, SDL_SCALEMODE_NEAREST);
 }
 
 void Gfx::cleanup() {
@@ -257,6 +259,9 @@ void Gfx::cleanup() {
 }
 
 void Gfx::begin_frame() {
+	assert(spriteAtlas != nullptr);
+	assert(fontIdx != UINT32_MAX);
+
 #ifndef USE_SDL_RENDERER
 #else
 	SDL_SetRenderTarget(renderer, textureScreen1);
@@ -345,6 +350,60 @@ void Gfx::queue_rect(SDL_FRect dest, const SDL_FColor& color) {
 	SDL_SetRenderDrawColorFloat(renderer, EXPAND_COL(color));
 	SDL_RenderFillRect(renderer, &dest);
 #endif
+}
+
+void Gfx::queue_text(int x, int y, const char* text, const SDL_FColor& color) {
+	const SubTexture& fontSubtex = spriteAtlas->subTextures[fontIdx];
+	int len = strlen(text);
+
+	int px = x, py = y;
+	for (int i = 0; i < len; i++) {
+		switch (text[i]) {
+		case '\n':
+			px = x;
+			py += 8;
+			break;
+		default:
+			int unrolled = (text[i] - 32) * 8;
+			SDL_Rect src = {
+				unrolled % fontSubtex.width,
+				(unrolled / fontSubtex.width) * 8,
+				8,
+				8
+			};
+			queue_sprite(px, py, fontSubtex, src, false, color);
+			px += 8;
+		}
+	}
+}
+
+void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
+	SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
+	SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
+
+	SDL_FRect dest = {
+		static_cast<float>(x),
+		static_cast<float>(y),
+		static_cast<float>(src.w),
+		static_cast<float>(src.h)
+	};
+
+	SDL_FRect fSrc;
+	SDL_RectToFRect(&src, &fSrc);
+	fSrc.x += subTex.x;
+	fSrc.y += subTex.y;
+
+	if (useCamera) {
+		dest.x -= cameraPos.x;
+		dest.y -= cameraPos.y;
+	}
+
+	SDL_RenderTexture(renderer, textureAtlas, &fSrc, &dest);
+}
+
+
+void Gfx::queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
+	queue_sprite(x, y, spriteAtlas->subTextures[fontIdx], src, useCamera, color);
 }
 
 /*
