@@ -350,7 +350,7 @@ void Gfx::queue_rect(SDL_FRect dest, const SDL_FColor& color) {
 
 void Gfx::queue_text(int x, int y, const char* text, const SDL_FColor& color) {
 	const SubTexture& fontSubtex = spriteAtlas->subTextures[fontIdx];
-	int len = strlen(text);
+	size_t len = strlen(text);
 
 	int px = x, py = y;
 	for (int i = 0; i < len; i++) {
@@ -399,6 +399,9 @@ void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& s
 
 
 void Gfx::queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
+	if (spriteIdx == TextureAtlas::INVALID_IDX)
+		return;
+
 	queue_sprite(x, y, spriteAtlas->subTextures[spriteIdx], src, useCamera, color);
 }
 
@@ -416,7 +419,7 @@ void Gfx::queue_rect(const SDL_FRect& dest, const SDL_Color& color) {
 */
 
 SDL_FColor Gfx::hsv_to_col(float h, float s, float v, float a) {
-	SDL_FColor color;
+	SDL_FColor color = {};
 
 	// Normalize hue to 0-360 range
 	h = fmodf(h, 360.0f);

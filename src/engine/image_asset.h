@@ -12,10 +12,13 @@ struct SpriteSheet;
 //
 
 struct SubTexture {
+	static constexpr int KEY_LENGTH = 32;
+
 	int x, y;
 	int width, height;
 
 	SpriteSheet* sheetData;
+	char key[KEY_LENGTH];
 private:
 	// Only TextureAtlas gets to manage the CPU side texture data
 	friend struct TextureAtlas;
@@ -30,14 +33,20 @@ struct TextureAtlas {
 	void create(int w, int h);
 	void destroy();
 
-	uint32_t add_to_atlas(const char* path, const char* jsonPath = nullptr);
 	void pack_atlas();
-	// notice how there is no remove_from_atlas - we don't need one :)
 
-	bool isPacked;
+	// key can be null, in that case it'll just autogenerate a key from the texture idx
+	uint32_t add_to_atlas(const char* key, const char* path, const char* jsonPath = nullptr);
+	
+	// does a linear search, gets the index of the sprite with the key
+	// do not use this in the main game loop, it is better to use it to cache a sprite when loading a gameobject
+	uint32_t find_sprite(const char* key) const;
 
-	int width, height;
-	int nSubtextures;
+
+	bool isPacked = false;
+
+	int width = -1, height = -1;
+	int nSubtextures = -1;
 
 	void* data = nullptr;
 	SubTexture subTextures[MAX_SUBTEXTURES];
@@ -89,9 +98,9 @@ struct SpriteAnimator {
 	int currentFrame : (sizeof(int) - 1);
 	bool pingpongForward : 1 = true;
 
-	void init();
+	void init(uint32_t sprite);
 	void start(int anim, const SpriteSheet& sheet);
 	void update(float delta, const SpriteSheet& sheet);
-	SDL_FRect current_framef(const SpriteSheet& sheet);
-	SDL_Rect current_frame(const SpriteSheet& sheet);
+	SDL_FRect current_framef(const SpriteSheet& sheet) const;
+	SDL_Rect current_frame(const SpriteSheet& sheet) const;
 };

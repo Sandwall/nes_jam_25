@@ -281,12 +281,25 @@ namespace tds {
 
 	template <typename T>
 	union T2 {
+		T& operator[](size_t i) { return v[i]; }
+
 		T v[2];
 		struct { T x, y; };
 	};
 
 	template <typename T>
+	union T3 {
+		T& operator[](size_t i) { return v[i]; }
+
+		T v[3];
+		struct { T x, y, z; };
+		struct { T r, g, b; };
+	};
+
+	template <typename T>
 	union T4 {
+		T& operator[](size_t i) { return v[i]; }
+
 		T v[4];
 		struct { T x, y, w, h; };
 		struct { T r, g, b, a; };

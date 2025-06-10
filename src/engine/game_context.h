@@ -4,9 +4,9 @@
 
 struct SDL_Window;
 
-class Gfx;
 struct TextureAtlas;
 struct Input;
+struct GameWorld;
 
 struct GameContext {
 	float delta;
@@ -20,7 +20,15 @@ struct GameContext {
 	}
 
 	SDL_Window* window;
-	TextureAtlas* atlas;
 	Input* input;
-	
+	TextureAtlas* atlas;
+	GameWorld* world;
+
+	// NOTE(sand): simdjson complains if I try to forward declare simdjson::ondemand::parser (probably from the backend auto-select feature)
+	// so we'll just keep it as a void pointer for now, and just let the implementation file (game_context.cpp) deal with it
+	static void init();
+	static void cleanup();
+	static void* jsonParser;
 };
+
+#define GET_JSON_PARSER reinterpret_cast<simdjson::ondemand::parser*>(GameContext::jsonParser)

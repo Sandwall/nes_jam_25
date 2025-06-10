@@ -16,7 +16,7 @@ namespace mems {
 		void clear_decommit();
 		void* peek();
 		void* push(size_t len);
-		void* push_data(void* pData, size_t sizeData);
+		void* push_data(const void* pData, size_t sizeData);
 		void* push_zero(size_t len);
 		void pop(size_t len);
 		void pop_to(size_t newPos);
@@ -202,7 +202,7 @@ namespace mems {
 	}
 
 	// Copies pData into the arena and returns a pointer to it
-	void* Arena::push_data(void* pData, size_t sizeData) {
+	void* Arena::push_data(const void* pData, size_t sizeData) {
 		assert(pos + sizeData < capacity);
 		_commit(static_cast<uint8_t*>(data) + pos, sizeData);
 		uint64_t prev = pos;

@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include "game_context.h"
 #include "image_asset.h"
 
 #include <simdjson.h>
@@ -10,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 
 void TextureAtlas::create(int w, int h) {
 	width = w;
@@ -38,7 +40,7 @@ void TextureAtlas::destroy() {
 // assumes that mems::init() has been called, as the scratch arena is used
 // we'll also impose a 10mb texture size limit
 // (assuming uncompressed 4-channel color, this is around a 1024x1024 image)
-uint32_t TextureAtlas::add_to_atlas(const char* imagePath, const char* jsonPath) {
+uint32_t TextureAtlas::add_to_atlas(const char* key, const char* imagePath, const char* jsonPath) {
 	if (isPacked)	// cannot add to an already packed atlas
 		return UINT32_MAX;
 
@@ -81,6 +83,11 @@ uint32_t TextureAtlas::add_to_atlas(const char* imagePath, const char* jsonPath)
 			&requestedChannels, NUM_CHANNELS)
 		);
 
+	if (key)
+		strncpy(subTex.key, key, SubTexture::KEY_LENGTH);
+	else
+		snprintf(subTex.key, SubTexture::KEY_LENGTH, "sprite%d", nSubtextures);
+
 	if (jsonPath)
 		subTex.sheetData = SpriteSheet::load(jsonPath, arena);
 	else
@@ -90,6 +97,15 @@ uint32_t TextureAtlas::add_to_atlas(const char* imagePath, const char* jsonPath)
 
 	return nSubtextures++;
 	// scratchScope goes out of scope so all scratch arena memory from this function is freed
+}
+
+uint32_t TextureAtlas::find_sprite(const char* key) const {
+	for (uint32_t i = 0; i < static_cast<uint32_t>(nSubtextures); i++) {
+		if (0 == strncmp(subTextures[i].key, key, SubTexture::KEY_LENGTH))
+			return i;
+	}
+
+	return INVALID_IDX;
 }
 
 // this function packs the rects into the atlas and frees the subtextures on the CPU-side
@@ -180,38 +196,38 @@ using namespace simdjson;
 SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	SpriteSheet* sheet = static_cast<SpriteSheet*>(arena.push_zero(sizeof(SpriteSheet)));
 
-	ondemand::parser parser;
 	padded_string json = padded_string::load(jsonPath);
-	ondemand::document sheetDoc = parser.iterate(json);
+
+	simdjson::ondemand::document sheetDoc = GET_JSON_PARSER->iterate(json);
 
 	// load source frame rects
 	auto framesVal = sheetDoc["frames"].get_array();
-	sheet->nFrames = framesVal.count_elements();
+	sheet->nFrames = static_cast<int>(framesVal.count_elements());
 	sheet->frames = static_cast<AnimationFrame*>(arena.push_zero(sizeof(AnimationFrame*) * sheet->nFrames));
 	int i = 0;    // simdjson's ondemand API with regards to array iteration does not give us the index,
 	              // so we need to manually keep track of it
 
 	for (auto frameData : framesVal) {
 		auto frameRect = frameData["frame"];
-		sheet->frames[i].source.x = static_cast<int>(frameRect["x"]);
-		sheet->frames[i].source.y = static_cast<int>(frameRect["y"]);
-		sheet->frames[i].source.w = static_cast<int>(frameRect["w"]);
-		sheet->frames[i].source.h = static_cast<int>(frameRect["h"]);
+		sheet->frames[i].source.x = frameRect["x"];
+		sheet->frames[i].source.y = frameRect["y"];
+		sheet->frames[i].source.w = frameRect["w"];
+		sheet->frames[i].source.h = frameRect["h"];
 		sheet->frames[i].duration = static_cast<float>(frameData["duration"]) / 1000.0f;
 		i++;
 	}
 
 	i = 0;
 	auto frameTags = sheetDoc["meta"]["frameTags"];
-	sheet->nAnimations = frameTags.count_elements();
+	sheet->nAnimations = static_cast<int>(frameTags.count_elements());
 	sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta*) * sheet->nAnimations));
 
 	for (auto frameTag : frameTags) {
-		sheet->anims[i].startFrame = static_cast<int>(frameTag["from"]);
-		sheet->anims[i].endFrame =   static_cast<int>(frameTag["to"]);
+		sheet->anims[i].startFrame = frameTag["from"];
+		sheet->anims[i].endFrame =   frameTag["to"];
 		sheet->anims[i].type = AnimationMeta::FORWARD;
 
-		const auto& dirStr = frameTag["direction"].get_string().value();
+		std::string_view dirStr = frameTag["direction"];
 		
 		// don't need to check against "forward" since we're assuming it by default
 		if (0 == dirStr.compare("pingpong")) {
@@ -226,7 +242,8 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	return sheet;
 }
 
-void SpriteAnimator::init() {
+void SpriteAnimator::init(uint32_t sprite) {
+	spriteIdx = sprite;
 	timer = 0.0f;
 	animIdx = 0;
 	currentFrame = 0;
@@ -285,12 +302,12 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 	}
 }
 
-SDL_FRect SpriteAnimator::current_framef(const SpriteSheet& sheet) {
+SDL_FRect SpriteAnimator::current_framef(const SpriteSheet& sheet) const {
 	SDL_FRect fr;
 	SDL_RectToFRect(&sheet.frames[currentFrame].source, &fr);
 	return fr;
 }
 
-SDL_Rect SpriteAnimator::current_frame(const SpriteSheet& sheet) {
+SDL_Rect SpriteAnimator::current_frame(const SpriteSheet& sheet) const {
 	return sheet.frames[currentFrame].source;
 }

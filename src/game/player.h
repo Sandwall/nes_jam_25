@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gameobject.h"
+#include "entity.h"
 #include "engine/image_asset.h"
 
 #include <tinydef.hpp>
 
-struct Player : GameObject {
+struct Player : Entity {
 	enum State {
 		Idle,
 		Walk,
@@ -14,12 +14,11 @@ struct Player : GameObject {
 		Max
 	};
 
-	tds::StateMachine<Max> state;
-	SpriteAnimator animator;
-	SubTexture subtex;
-	SpriteSheet* sheet; // loaded in by the atlas
+	tds::T2<float> velocity;
 
-	void load(TextureAtlas& atlas);
+	tds::StateMachine<Max> state;
+
+	void load(TextureAtlas& atlas) override;
 	void update(const GameContext& ctx) override;
 	void render(Gfx& gfx) override;
 };

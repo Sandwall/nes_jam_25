@@ -36,9 +36,14 @@ struct Input {
 
 	union {
 		struct {
-			InputAction up, left, down, right;
-			InputAction a, b;
-			InputAction select, start;
+			InputAction up;
+			InputAction left;
+			InputAction down;
+			InputAction right;
+			InputAction a;
+			InputAction b;
+			InputAction select;
+			InputAction start;
 		};
 
 		InputAction actions[8];
@@ -46,8 +51,8 @@ struct Input {
 
 	SDL_Scancode keyBindings[InputAction::MAX] = {
 		SDL_SCANCODE_UP,		// up
-		SDL_SCANCODE_DOWN,		// down
 		SDL_SCANCODE_LEFT,		// left
+		SDL_SCANCODE_DOWN,		// down
 		SDL_SCANCODE_RIGHT,		// right
 		SDL_SCANCODE_Z,			// a
 		SDL_SCANCODE_X,			// b

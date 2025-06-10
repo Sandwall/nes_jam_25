@@ -90,13 +90,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\game_context.cpp" />
     <ClCompile Include="src\engine\gfx.cpp" />
     <ClCompile Include="src\engine\input.cpp" />
     <ClCompile Include="src\engine\libs.cpp" />
     <ClCompile Include="src\engine\image_asset.cpp" />
     <ClCompile Include="src\game\collision.cpp" />
-    <ClCompile Include="src\game\gameobject.cpp" />
-    <ClCompile Include="src\game\level.cpp" />
+    <ClCompile Include="src\game\world.cpp" />
     <ClCompile Include="src\game\player.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
@@ -108,8 +108,8 @@
     <ClInclude Include="src\engine\nes_apu.hpp" />
     <ClInclude Include="src\engine\nsf.hpp" />
     <ClInclude Include="src\game\collision.h" />
-    <ClInclude Include="src\game\gameobject.h" />
-    <ClInclude Include="src\game\level.h" />
+    <ClInclude Include="src\game\entity.h" />
+    <ClInclude Include="src\game\world.h" />
     <ClInclude Include="src\game\player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

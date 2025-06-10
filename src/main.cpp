@@ -6,6 +6,7 @@
 #include "engine/image_asset.h"
 
 #include "game/player.h"
+#include "game/world.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -22,17 +23,21 @@ TextureAtlas atlas;
 GameContext game = {
 	.delta = 1.0f / 60.0f,
 	.targetFps = 60,
-	.atlas = &atlas,
 	.input = &input,
+	.atlas = &atlas,
 };
 
 Player player;
+GameWorld world;
+
+int main_loop();
 
 int main(int argc, char** argv) {
 	if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD))
 		return -1;
 
 	mems::init();
+	GameContext::init();
 
 	// create window and init graphics
 	game.window = SDL_CreateWindow("NES Game!", defWidth, defHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
@@ -40,18 +45,31 @@ int main(int argc, char** argv) {
 	if (!gfx.init(game.window))
 		return -1;
 
-	// create atlas
+	// create atlas and load all assets
 	atlas.create(1024, 1024);
+	gfx.fontIdx = atlas.add_to_atlas("font", "./res/font.png");
+	atlas.add_to_atlas("player", "./res/mainChar/mage3.png", "./res/mainChar/mage3.json");
+	atlas.add_to_atlas("enemy1", "./res/enemy1/enemy1.png", "./res/enemy1/enemy1.json");
 
-	gfx.fontIdx = atlas.add_to_atlas("./res/font.png");
 	player.load(atlas);
+	//world.init("./res/world1.ldtk", game);
 
 	atlas.pack_atlas();
 	gfx.upload_atlas(atlas);
 
 	SDL_ShowWindow(game.window);
-	bool windowStaysAlive = true;
-	while (windowStaysAlive) {
+	int returnVal = main_loop();
+	
+	gfx.cleanup();
+	atlas.destroy();
+	SDL_DestroyWindow(game.window);
+	GameContext::cleanup();
+	mems::close();
+	SDL_Quit();
+}
+
+int main_loop() {
+	while (true) {
 		// timer start - this is meant for framelimiting
 		const Uint64 startFrame = SDL_GetTicksNS();
 
@@ -60,9 +78,8 @@ int main(int argc, char** argv) {
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 			case SDL_EVENT_QUIT:
-				windowStaysAlive = false;
-				break;
-				
+				return EXIT_SUCCESS;
+
 			case SDL_EVENT_KEY_DOWN:
 			case SDL_EVENT_KEY_UP:
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -75,9 +92,6 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
-
-		// skip frame if we get the signal to quit the window
-		if (!windowStaysAlive) break;
 
 		//
 		// update
@@ -94,7 +108,7 @@ int main(int argc, char** argv) {
 		gfx.queue_text(16, 16, "NES Game Jam!");
 
 		gfx.finish_frame();
-		
+
 		// end frame - framelimiting logic
 		Uint64 elapsed = SDL_GetTicksNS() - startFrame;
 		if (game.target_ns() > elapsed) {
@@ -106,10 +120,4 @@ int main(int argc, char** argv) {
 		elapsed = SDL_GetTicksNS() - startFrame;
 		game.delta = SDL_NS_TO_SECONDS(static_cast<float>(elapsed));
 	}
-	
-	gfx.cleanup();
-	atlas.destroy();
-	SDL_DestroyWindow(game.window);
-	mems::close();
-	SDL_Quit();
 }
