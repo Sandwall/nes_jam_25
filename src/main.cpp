@@ -9,6 +9,7 @@
 #include "engine/image_asset.h"
 
 #include "game/player.h"
+#include "game/enemy.h"
 #include "game/world.h"
 
 #include <stdio.h>
@@ -18,8 +19,11 @@
 
 #include <tinydef.hpp>
 #include <mems.hpp>
+#include <vector>
 
 constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
+
+constexpr float setVelocityX{20.0f};
 
 Input input;
 Gfx gfx;
@@ -27,6 +31,7 @@ TextureAtlas atlas;
 GameWorld world;
 
 Player player;
+std::vector<Enemy> enemies;
 
 GameContext game = {
 	.delta = 1.0f / 60.0f,
@@ -55,6 +60,9 @@ int main(int argc, char** argv) {
 
 	// load world (this happens before atlas creation because we need to prepare relPaths of the tilesets)
 	world.init("./res/world1.ldtk");
+
+	if (!enemies.empty()) enemies.clear();
+	enemies.resize(3);
 	
 	// create atlas and load all assets
 	atlas.create(1024, 1024);
@@ -68,6 +76,19 @@ int main(int argc, char** argv) {
 	// load gameobjects from texture atlas
 	// image assets are already loaded, the gameobjects simply just need to cache the indices of the assets they need
 	player.load(atlas);
+
+	// Load all the enemies using its texture atlas info
+	for (int i = 0; i < enemies.size(); i++) enemies[i].load(atlas);
+
+	// Spawn enemies at different locations
+	enemies[0].spawn(50.0f, 100.0f);
+	enemies[1].spawn(150.0f, 100.0f);
+	enemies[2].spawn(300.0f, 100.0f);
+
+	// Set the velocities of the different enemies or use for loop and set the velocities to the same value for every enemy
+	enemies[0].set_velocity(5.0f, 0.0f);
+	enemies[1].set_velocity(5.0f, 0.0f);
+	enemies[2].set_velocity(5.0f, 0.0f);
 
 	SDL_ShowWindow(game.window);
 	int returnVal = main_loop();
@@ -133,6 +154,26 @@ int main_loop() {
 
 		// update entities
 		player.update(game);
+
+		for (int i = 0; i < enemies.size(); i++) enemies[i].update(game); // Update all enemies
+
+		enemies[0].enemyTime += game.delta; // Increase enemy time by delta time of the game
+
+		// Change the velocity of the enemy after certain time for testing
+		if (enemies[0].enemyTime >= 0.0f && enemies[0].enemyTime <= 2.0f)
+		{
+			// Set the enemy's velocity to forward current velocity
+			if (enemies[0].velocity.x != setVelocityX) enemies[0].velocity.x = setVelocityX;
+		}
+
+		else if (enemies[0].enemyTime > 2.0f && enemies[0].enemyTime <= 4.0f)
+		{
+			// Set the enemy's velocity to reverse current velocity
+			if (enemies[0].velocity.x != -setVelocityX) enemies[0].velocity.x = -setVelocityX;
+		}
+
+		else if (enemies[0].enemyTime > 4.0f) enemies[0].enemyTime = 0.0f;
+
 		camera_update();
 		input.end_frame();
 
@@ -143,6 +184,8 @@ int main_loop() {
 
 		world.render(gfx, game);
 		player.render(gfx);
+
+		for (int i = 0; i < enemies.size(); i++) enemies[i].render(gfx); // Render all enemies using gfx
 
 		gfx.finish_frame();
 

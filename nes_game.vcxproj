@@ -90,6 +90,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game\enemy.cpp" />
     <ClCompile Include="src\engine\game_context.cpp" />
     <ClCompile Include="src\engine\gfx.cpp" />
     <ClCompile Include="src\engine\input.cpp" />
@@ -101,6 +102,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\game\enemy.h" />
     <ClInclude Include="src\engine\game_context.h" />
     <ClInclude Include="src\engine\gfx.h" />
     <ClInclude Include="src\engine\input.h" />
