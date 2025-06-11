@@ -19,16 +19,19 @@ constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
 Input input;
 Gfx gfx;
 TextureAtlas atlas;
+GameWorld world;
+
+Player player;
 
 GameContext game = {
 	.delta = 1.0f / 60.0f,
 	.targetFps = 60,
+	.gfx = &gfx,
 	.input = &input,
 	.atlas = &atlas,
+	.world = &world,
+	.player = &player,
 };
-
-Player player;
-GameWorld world;
 
 int main_loop();
 
@@ -52,7 +55,6 @@ int main(int argc, char** argv) {
 	atlas.add_to_atlas("enemy1", "./res/enemy1/enemy1.png", "./res/enemy1/enemy1.json");
 
 	player.load(atlas);
-
 	world.init("./res/world1.ldtk", game);
 	world.load_assets(atlas);
 

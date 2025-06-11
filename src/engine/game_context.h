@@ -2,27 +2,28 @@
 
 #include <stdint.h>
 
-struct SDL_Window;
-
-struct TextureAtlas;
-struct Input;
-struct GameWorld;
-
 struct GameContext {
 	float delta;
-	// need another 4byte val here
+	// we can fit another 4-byte value here
+
+	// NOTE(sand): I thought it might be a good idea for the gameobject logic to check this value and update
+	// only if it is not true, however it makes more sense to keep this outside of the gameobject logic and
+	// instead keep track of it as a part of the main game loop
+	// bool loading;
 
 	uint64_t targetFps;
+	uint64_t target_ns() const;
 
-	uint64_t target_ns() const {
-		if (targetFps == 0) return 0;
-		return 1000000000LL / targetFps;
-	}
+	// engine details
+	struct SDL_Window* window;
+	const struct Gfx* gfx;
+	struct Input* input;
+	struct TextureAtlas* atlas;
 
-	SDL_Window* window;
-	Input* input;
-	TextureAtlas* atlas;
-	GameWorld* world;
+	// game details
+	struct GameWorld* world;
+	struct Player* player;
+	// TODO(sand): eventually we might have pointers to enemies/bosses here
 
 	// NOTE(sand): simdjson complains if I try to forward declare simdjson::ondemand::parser (probably from the backend auto-select feature)
 	// so we'll just keep it as a void pointer for now, and just let the implementation file (game_context.cpp) deal with it

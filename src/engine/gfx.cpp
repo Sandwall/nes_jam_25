@@ -480,3 +480,11 @@ SDL_FColor Gfx::hsv_to_col(float h, float s, float v, float a) {
 
 	return color;
 }
+
+SDL_FPoint Gfx::world_to_screen(SDL_FPoint pt) const {
+	return SDL_FPoint{ pt.x - cameraPos.x, pt.y - cameraPos.y };
+}
+
+SDL_FPoint Gfx::screen_to_world(SDL_FPoint pt) const {
+	return SDL_FPoint{ pt.x + cameraPos.x, pt.y + cameraPos.y };
+}

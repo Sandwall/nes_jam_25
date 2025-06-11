@@ -1,6 +1,11 @@
 #include "game_context.h"
 #include <simdjson.h>
 
+uint64_t GameContext::target_ns() const {
+	if (targetFps == 0) return 0;
+	return 1000000000LL / targetFps;
+}
+
 void* GameContext::jsonParser = nullptr;
 
 // NOTE(sand): I would prefer not to use struct static variables, however seeing as we aren't loading more than one JSON at the same time

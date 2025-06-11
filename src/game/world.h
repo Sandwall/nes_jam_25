@@ -121,12 +121,12 @@ struct GameContext;
 struct TextureAtlas;
 
 struct GameWorld {
-	int nTilesets;
-	int nLevels;
-	LdtkTilesetDef* tilesets;
-	LdtkLevel* levels;
+	int nTilesets = 0;
+	int nLevels = 0;
+	LdtkTilesetDef* tilesets = nullptr;
+	LdtkLevel* levels = nullptr;
 
-	const char* parentDirPath;
+	const char* parentDirPath = nullptr;
 
 	// allocates and deallocates memory for the world
 	// also loads levels from ldtk file

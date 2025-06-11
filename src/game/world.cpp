@@ -4,6 +4,8 @@
 #include "engine/image_asset.h"
 #include "engine/gfx.h"
 
+#include "collision.h"
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_stdinc.h>
 
@@ -75,7 +77,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 	// loading definitions
 	// we only care about tilesets (see https://ldtk.io/json/#ldtk-DefinitionsJson)
 	auto tilesetDefinitions = doc["defs"]["tilesets"].get_array();
-	nTilesets = tilesetDefinitions.count_elements();
+	nTilesets = static_cast<int>(tilesetDefinitions.count_elements());
 	tilesets = static_cast<LdtkTilesetDef*>(arena.push_zero(sizeof(LdtkTilesetDef) * nTilesets));
 	int i = 0;
 
@@ -99,7 +101,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 	// loading levels
 	//
 	auto docLevels = doc["levels"];
-	nLevels = docLevels.count_elements();
+	nLevels = static_cast<int>(docLevels.count_elements());
 	levels = static_cast<LdtkLevel*>(arena.push_zero(sizeof(LdtkLevel) * nLevels));
 	i = 0;
 
@@ -117,7 +119,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 		l.pxHeight = static_cast<int>(level["pxHei"]);
 		
 		auto layerInstances = level["layerInstances"].get_array();
-		l.nLayers = layerInstances.count_elements();
+		l.nLayers = static_cast<int>(layerInstances.count_elements());
 		l.layers = static_cast<LdtkLayerInstance*>(arena.push(sizeof(LdtkLayerInstance) * l.nLayers));
 		int j = 0;
 
@@ -168,7 +170,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 			} break;
 			case LdtkLayerInstance::INTGRID: {
 				auto intGridArray = layerInst["intGridCsv"].get_array();
-				li.nData = intGridArray.count_elements();
+				li.nData = static_cast<int>(intGridArray.count_elements());
 				li.intGridData = static_cast<int*>(arena.push(sizeof(int) * li.nData));
 				int k = 0;
 				for (auto element : intGridArray) {
@@ -189,7 +191,7 @@ void GameWorld::cleanup() {
 
 void GameWorld::load_assets(TextureAtlas& atlas) {
 	mems::Arena& scratch = mems::get_scratch();
-	int parentDirLen = strlen(parentDirPath);
+	size_t parentDirLen = strlen(parentDirPath);
 
 	for (int i = 0; i < nTilesets; i++) {
 		mems::ArenaScope forScope(scratch);
@@ -205,11 +207,26 @@ void GameWorld::load_assets(TextureAtlas& atlas) {
 }
 
 void GameWorld::render(Gfx& gfx) {
-
 	for (int i = 0; i < nLevels; i++) {
 		LdtkLevel& level = levels[i];
+
+		// skip rendering level if it is not visible
+		if (!coll::rect_rect(
+			static_cast<int>(gfx.cameraPos.x), static_cast<int>(gfx.cameraPos.y), Gfx::nesWidth, Gfx::nesHeight,
+			level.pxWorldX, level.pxWorldY, level.pxWidth, level.pxHeight)
+			) continue;
+
 		for (int j = 0; j < level.nLayers; j++) {
 			LdtkLayerInstance& li = level.layers[j];
+			if (li.type == LdtkLayerInstance::TILE) {
+				const uint32_t atlasIdx = li.gridTile.tileset->atlasIdx;
+				const int tileSize = li.gridTile.tileset->cellSize;
+
+				for (int k = 0; k < li.nData; k++) {
+					const LdtkGridTileInstance& tile = li.gridTile.data[k];
+					gfx.queue_sprite(tile.layerX, tile.layerY, atlasIdx, {tile.srcX, tile.srcY, tileSize, tileSize}, true);
+				}
+			}
 		}
 	}
 }
