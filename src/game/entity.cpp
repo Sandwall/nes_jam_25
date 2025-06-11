@@ -11,5 +11,5 @@ bool Entity::is_in_room(const LdtkLevel* level) {
 }
 
 SDL_FRect Entity::get_cboxf() {
-	return SDL_FRect{ pos.x - origin.x, pos.y - origin.y, collBoxSize.x, collBoxSize.y };
+	return SDL_FRect{ pos.x - origin.x, pos.y - collBoxSize.y, collBoxSize.x, collBoxSize.y };
 }

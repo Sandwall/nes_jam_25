@@ -115,6 +115,7 @@ void GameWorld::init(const char* path) {
 
 	for (auto level : docLevels) {
 		LdtkLevel& l = levels[i++];
+		l.collisionLayerIdx = -1;
 
 		// NOTE(sand): same thing as the previous comment here
 		l.identifier = copy_to_arena(level["identifier"], arena);
@@ -133,14 +134,19 @@ void GameWorld::init(const char* path) {
 
 		for (auto layerInst : layerInstances) {
 			LdtkLayerInstance& li = l.layers[j++];
-			li.identifier = copy_to_arena(layerInst["__identifier"], arena);
+			std::string_view identifier = layerInst["__identifier"].get_string();
+			li.identifier = copy_to_arena(identifier, arena);
 			
 			std::string_view type = layerInst["__type"].get_string();
 			if (0 == type.compare("Tiles"))
 				li.type = LdtkLayerInstance::TILE;
-			else if (0 == type.compare("IntGrid"))
+			else if (0 == type.compare("IntGrid")) {
 				li.type = LdtkLayerInstance::INTGRID;
-			else if (0 == type.compare("Entities"))
+				if (0 == identifier.compare("Collision")) {
+					// by this point we've already incremented j, so we need to subtract 1 for the correct index
+					l.collisionLayerIdx = j - 1;
+				}
+			} else if (0 == type.compare("Entities"))
 				li.type = LdtkLayerInstance::ENTITY;
 
 			li.widthCells = static_cast<int>(layerInst["__cWid"]);
@@ -190,6 +196,9 @@ void GameWorld::init(const char* path) {
 			} break;
 			}
 		}
+
+		if (-1 == l.collisionLayerIdx)
+			fprintf(stderr, "Failed to find collision layer while loading %s", path);
 	}
 }
 

@@ -340,9 +340,25 @@ void Gfx::finish_frame() {
 
 }
 
-void Gfx::queue_rect(SDL_FRect dest, const SDL_FColor& color) {
+void Gfx::queue_point(SDL_FPoint pt, bool useCamera, const SDL_FColor& color) {
 #ifndef USE_SDL_RENDERER
 #else
+	if (useCamera) {
+		pt.x -= cameraPos.x;
+		pt.y -= cameraPos.y;
+	}
+	SDL_SetRenderDrawColorFloat(renderer, EXPAND_COL(color));
+	SDL_RenderPoint(renderer, pt.x, pt.y);
+#endif
+}
+
+void Gfx::queue_rect(SDL_FRect dest, bool useCamera, const SDL_FColor& color) {
+#ifndef USE_SDL_RENDERER
+#else
+	if (useCamera) {
+		dest.x -= cameraPos.x;
+		dest.y -= cameraPos.y;
+	}
 	SDL_SetRenderDrawColorFloat(renderer, EXPAND_COL(color));
 	SDL_RenderFillRect(renderer, &dest);
 #endif

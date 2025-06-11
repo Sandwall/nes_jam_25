@@ -131,18 +131,18 @@ int main_loop() {
 			}
 		}
 
+		// update entities
 		player.update(game);
 		camera_update();
+		input.end_frame();
 
 		//
 		// render
 		//
-		input.end_frame();
 		gfx.begin_frame();
 
 		world.render(gfx, game);
 		player.render(gfx);
-		gfx.queue_text(16, 16, "NES Game Jam!");
 
 		gfx.finish_frame();
 
@@ -161,15 +161,16 @@ int main_loop() {
 
 constexpr float CAM_SPEED = 7.5f;
 void camera_update() {
-	const int targetX = player.pos.x - (Gfx::nesWidth / 2);
-	const int targetY = player.pos.y - (Gfx::nesHeight / 2);
+	int targetX = player.pos.x - (Gfx::nesWidth / 2);
+	int targetY = player.pos.y - (Gfx::nesHeight / 2);
+
+	if (game.playerRoom) {
+		const LdtkLevel& room = *game.playerRoom;
+		targetX = tim::clamp(targetX, room.pxWorldX, room.pxWidth - Gfx::nesWidth);
+		targetY = tim::clamp(targetY, room.pxWorldY, room.pxHeight - Gfx::nesHeight);
+	}
 
 	gfx.cameraPos.x = tim::filerp32(gfx.cameraPos.x, targetX, CAM_SPEED, game.delta);
 	gfx.cameraPos.y = tim::filerp32(gfx.cameraPos.y, targetY, CAM_SPEED, game.delta);
 
-	if (game.playerRoom) {
-		const LdtkLevel& room = *game.playerRoom;
-		gfx.cameraPos.x = tim::clamp(gfx.cameraPos.x, static_cast<float>(room.pxWorldX), static_cast<float>(room.pxWidth - Gfx::nesWidth));
-		gfx.cameraPos.y = tim::clamp(gfx.cameraPos.y, static_cast<float>(room.pxWorldY), static_cast<float>(room.pxHeight - Gfx::nesHeight));
-	}
 }

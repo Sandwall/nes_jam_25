@@ -22,7 +22,8 @@ struct Gfx {
 	void upload_atlas(const TextureAtlas& atlas);
 	void cleanup();
 
-	void queue_rect(SDL_FRect dest, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_point(SDL_FPoint pt, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_rect(SDL_FRect dest, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	// always draws text @ font height 8
 	void queue_text(int x, int y, const char* text, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 

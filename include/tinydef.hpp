@@ -131,6 +131,18 @@ namespace tim {
 		return x;
 	}
 
+	template <typename T>
+	constexpr T max(T first, T second) {
+		if (first > second) return first;
+		return second;
+	}
+
+	template <typename T>
+	constexpr T min(T first, T second) {
+		if (first < second) return first;
+		return second;
+	}
+
 	// This function extends clamp to strictly keep a value in between a range
 	// doesn't matter the order of the range arguments
 	template <typename T>

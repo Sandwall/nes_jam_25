@@ -113,6 +113,8 @@ struct LdtkLevel {
 	int nLayers;
 	LdtkLayerInstance* layers;
 
+	int collisionLayerIdx;
+
 	SDL_Rect get_bbox() const;
 	SDL_FRect get_bboxf() const;
 };
