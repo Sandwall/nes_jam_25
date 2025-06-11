@@ -1,5 +1,7 @@
 #pragma once
 
+// NOTE(sand): Try to ensure this header does not get included in any other engine code
+
 #include <stdint.h>
 
 struct GameContext {
@@ -20,10 +22,19 @@ struct GameContext {
 	struct Input* input;
 	struct TextureAtlas* atlas;
 
-	// game details
+	// game details (eventually we might have pointers to enemies/bosses here)
 	struct GameWorld* world;
 	struct Player* player;
-	// TODO(sand): eventually we might have pointers to enemies/bosses here
+
+	// at the start of every frame, the game looks at which rooms the camera can see and which room the player
+	// is in and updates these with at max 4 of those rooms. It's fine to do this at the start of the frame
+	// because we should have designed the level structure such that the next frame's processRooms must have
+	// at least one of the previous frames processRooms. 
+	static constexpr int NUM_PROCESS_ROOMS = 4;
+	int nProcessRooms;
+	struct LdtkLevel* processRooms[NUM_PROCESS_ROOMS];
+	struct LdtkLevel* playerRoom;
+
 
 	// NOTE(sand): simdjson complains if I try to forward declare simdjson::ondemand::parser (probably from the backend auto-select feature)
 	// so we'll just keep it as a void pointer for now, and just let the implementation file (game_context.cpp) deal with it

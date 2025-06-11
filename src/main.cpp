@@ -1,5 +1,8 @@
 #include <SDL3/SDL.h>
 
+#define TINYDEF_EXPF expf
+#define TINYDEF_EXP exp
+
 #include "engine/input.h"
 #include "engine/gfx.h"
 #include "engine/game_context.h"
@@ -9,7 +12,9 @@
 #include "game/world.h"
 
 #include <stdio.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
+
 
 #include <tinydef.hpp>
 #include <mems.hpp>
@@ -48,18 +53,21 @@ int main(int argc, char** argv) {
 	if (!gfx.init(game.window))
 		return -1;
 
+	// load world (this happens before atlas creation because we need to prepare relPaths of the tilesets)
+	world.init("./res/world1.ldtk");
+	
 	// create atlas and load all assets
 	atlas.create(1024, 1024);
 	gfx.fontIdx = atlas.add_to_atlas("font", "./res/font.png");
 	atlas.add_to_atlas("player", "./res/mainChar/mage3.png", "./res/mainChar/mage3.json");
 	atlas.add_to_atlas("enemy1", "./res/enemy1/enemy1.png", "./res/enemy1/enemy1.json");
-
-	player.load(atlas);
-	world.init("./res/world1.ldtk", game);
 	world.load_assets(atlas);
-
 	atlas.pack_atlas();
 	gfx.upload_atlas(atlas);
+
+	// load gameobjects from texture atlas
+	// image assets are already loaded, the gameobjects simply just need to cache the indices of the assets they need
+	player.load(atlas);
 
 	SDL_ShowWindow(game.window);
 	int returnVal = main_loop();
@@ -71,6 +79,8 @@ int main(int argc, char** argv) {
 	mems::close();
 	SDL_Quit();
 }
+
+void camera_update();
 
 int main_loop() {
 	while (true) {
@@ -100,7 +110,29 @@ int main_loop() {
 		//
 		// update
 		//
+
+		// update process rooms and player room
+		memset(game.processRooms, 0, sizeof(LdtkLevel*) * GameContext::NUM_PROCESS_ROOMS);
+		game.playerRoom = nullptr;
+		game.nProcessRooms = 0;
+		SDL_FRect camBbox = gfx.cam_bboxf();
+
+		for (int i = 0; i < world.nLevels; i++) {
+			LdtkLevel& level = world.levels[i];
+			const SDL_FRect levelBbox = level.get_bboxf();
+
+			if (player.is_in_room(&level))
+				game.playerRoom = &level;
+
+			if (SDL_HasRectIntersectionFloat(&camBbox, &levelBbox)) {
+				game.processRooms[game.nProcessRooms++] = &level;
+				if (game.nProcessRooms >= GameContext::NUM_PROCESS_ROOMS)
+					break;
+			}
+		}
+
 		player.update(game);
+		camera_update();
 
 		//
 		// render
@@ -108,7 +140,7 @@ int main_loop() {
 		input.end_frame();
 		gfx.begin_frame();
 
-		world.render(gfx);
+		world.render(gfx, game);
 		player.render(gfx);
 		gfx.queue_text(16, 16, "NES Game Jam!");
 
@@ -124,5 +156,20 @@ int main_loop() {
 		// calculate delta time
 		elapsed = SDL_GetTicksNS() - startFrame;
 		game.delta = SDL_NS_TO_SECONDS(static_cast<float>(elapsed));
+	}
+}
+
+constexpr float CAM_SPEED = 7.5f;
+void camera_update() {
+	const int targetX = player.pos.x - (Gfx::nesWidth / 2);
+	const int targetY = player.pos.y - (Gfx::nesHeight / 2);
+
+	gfx.cameraPos.x = tim::filerp32(gfx.cameraPos.x, targetX, CAM_SPEED, game.delta);
+	gfx.cameraPos.y = tim::filerp32(gfx.cameraPos.y, targetY, CAM_SPEED, game.delta);
+
+	if (game.playerRoom) {
+		const LdtkLevel& room = *game.playerRoom;
+		gfx.cameraPos.x = tim::clamp(gfx.cameraPos.x, static_cast<float>(room.pxWorldX), static_cast<float>(room.pxWidth - Gfx::nesWidth));
+		gfx.cameraPos.y = tim::clamp(gfx.cameraPos.y, static_cast<float>(room.pxWorldY), static_cast<float>(room.pxHeight - Gfx::nesHeight));
 	}
 }

@@ -5,8 +5,6 @@
 
 #include <mems.hpp>
 
-struct SpriteSheet;
-
 //
 // TEXTURES
 //
@@ -17,7 +15,7 @@ struct SubTexture {
 	int x, y;
 	int width, height;
 
-	SpriteSheet* sheetData;
+	struct SpriteSheet* sheetData;
 	char key[KEY_LENGTH];
 private:
 	// Only TextureAtlas gets to manage the CPU side texture data

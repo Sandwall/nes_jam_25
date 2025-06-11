@@ -5,15 +5,23 @@
 #include "engine/gfx.h"
 #include "engine/input.h"
 
-void Player::load(TextureAtlas& atlas) {
-	x = 64;
-	y = 64;
+#include "game/world.h"
 
+void Player::load(const TextureAtlas& atlas) {
 	animator.init(atlas.find_sprite("player"));
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
+	pos = { 64.0f, 64.0f };
 	velocity = { 0.0f, 0.0f };
+
+	if (sheet->frames) {
+		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
+		origin = { collBoxSize.x / 2.0f, collBoxSize.y };
+	} else {
+		origin = { 8.0f, 32.0f };
+		collBoxSize = { 16.0f, 32.0f };
+	}
 }
 
 void Player::update(const GameContext& ctx) {
@@ -30,21 +38,19 @@ void Player::update(const GameContext& ctx) {
 
 	// apply gravity
 	velocity.y += gravity * ctx.delta;
-	if (y > (240 - currentRect.h)) {
-		y = 240 - currentRect.h;
-		velocity.y = -velocity.y;
-	}
 	
 	// TODO(sand): See where player will move in the next frame, and test for collisions
 	// if the GameContext has a GameWorld attached to it
+
 	//if(ctx.world)
 	
-	x += velocity.x * ctx.delta;
-	y += velocity.y * ctx.delta;
+	pos.x += velocity.x * ctx.delta;
+	pos.y += velocity.y * ctx.delta;
 
 	animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
 }
 
 void Player::render(Gfx& gfx) {
-	gfx.queue_sprite(static_cast<int>(x), static_cast<int>(y), animator.spriteIdx, animator.current_frame(*sheet));
+	const SDL_FRect cbox = get_cboxf();
+	gfx.queue_sprite(static_cast<int>(cbox.x), static_cast<int>(cbox.y), animator.spriteIdx, animator.current_frame(*sheet));
 }

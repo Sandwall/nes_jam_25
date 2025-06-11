@@ -288,15 +288,15 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 			if (pingpongForward) {
 				currentFrame++;
 				if (currentFrame > cAnimMeta.endFrame) {
-					currentFrame = cAnimMeta.startFrame;
+					currentFrame = cAnimMeta.endFrame;
 					pingpongForward = false;
 				} else if (currentFrame < cAnimMeta.startFrame)
 					currentFrame = cAnimMeta.startFrame;
 			} else {
 				currentFrame--;
 				if (currentFrame < cAnimMeta.startFrame) {
-					currentFrame = cAnimMeta.endFrame;
-					pingpongForward = false;
+					currentFrame = cAnimMeta.startFrame;
+					pingpongForward = true;
 				} else if (currentFrame > cAnimMeta.endFrame)
 					currentFrame = cAnimMeta.endFrame;
 			}

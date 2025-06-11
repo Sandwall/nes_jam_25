@@ -28,8 +28,8 @@ struct LdtkEnumDef {
 
 struct LdtkTilesetDef {
 	const char* relPath;
-	//const char* identifier;  // ~~this will be used for SubTexture retrieval, so it must match the SubTexture key~~
-	uint32_t atlasIdx;         // NOTE(sand): forget the above, we'll just store the indices in the atlas directly here
+	const char* identifier;    // this will be used for SubTexture retrieval, so it must match the SubTexture key~~
+	uint32_t atlasIdx;         // NOTE(sand): we'll cache the indices to the tileset image in the atlas directly here
 	int uid;                   // this is used to reference the tileset by LdtkLayerInstances
 	
 	// tileGridSize, __cWid, __cHei
@@ -113,12 +113,9 @@ struct LdtkLevel {
 	int nLayers;
 	LdtkLayerInstance* layers;
 
-	SDL_Rect get_bounding_box();
+	SDL_Rect get_bbox() const;
+	SDL_FRect get_bboxf() const;
 };
-
-struct Gfx;
-struct GameContext;
-struct TextureAtlas;
 
 struct GameWorld {
 	int nTilesets = 0;
@@ -130,15 +127,15 @@ struct GameWorld {
 
 	// allocates and deallocates memory for the world
 	// also loads levels from ldtk file
-	void init(const char* path, GameContext& ctx);
+	void init(const char* path);
 	void cleanup();
 
 	// call this after init, before packing atlas
-	void load_assets(TextureAtlas& atlas);
+	void load_assets(struct TextureAtlas& atlas);
 
 	bool shouldDrawTiles = true;
 	bool shouldDrawInt = true;
-	void render(Gfx& gfx);
+	void render(struct Gfx& gfx, const struct GameContext& ctx);
 private:
 	const char* _get_parent_dir(const char* path);
 	mems::Arena arena;

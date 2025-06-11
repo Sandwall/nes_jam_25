@@ -1,8 +1,6 @@
 #pragma once
 
 #include "entity.h"
-#include "engine/image_asset.h"
-
 #include <tinydef.hpp>
 
 struct Player : Entity {
@@ -15,10 +13,9 @@ struct Player : Entity {
 	};
 
 	tds::T2<float> velocity;
-
 	tds::StateMachine<Max> state;
 
-	void load(TextureAtlas& atlas) override;
-	void update(const GameContext& ctx) override;
-	void render(Gfx& gfx) override;
+	void load(const struct TextureAtlas& atlas) override;
+	void update(const struct GameContext& ctx) override;
+	void render(struct Gfx& gfx) override;
 };

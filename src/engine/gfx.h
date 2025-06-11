@@ -42,6 +42,8 @@ struct Gfx {
 	static SDL_FColor hsv_to_col(float h, float s, float v, float a);
 	SDL_FPoint world_to_screen(SDL_FPoint pt) const;
 	SDL_FPoint screen_to_world(SDL_FPoint pt) const;
+	SDL_Rect cam_bbox() const;
+	SDL_FRect cam_bboxf() const;
 
 private:
 	const TextureAtlas* spriteAtlas = nullptr;

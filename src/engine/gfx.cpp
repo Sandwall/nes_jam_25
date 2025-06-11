@@ -488,3 +488,11 @@ SDL_FPoint Gfx::world_to_screen(SDL_FPoint pt) const {
 SDL_FPoint Gfx::screen_to_world(SDL_FPoint pt) const {
 	return SDL_FPoint{ pt.x + cameraPos.x, pt.y + cameraPos.y };
 }
+
+SDL_Rect Gfx::cam_bbox() const {
+	return SDL_Rect{ static_cast<int>(cameraPos.x), static_cast<int>(cameraPos.y), nesWidth, nesHeight };
+}
+
+SDL_FRect Gfx::cam_bboxf() const {
+	return SDL_FRect{ cameraPos.x, cameraPos.y, static_cast<float>(nesWidth), static_cast<float>(nesHeight) };
+}

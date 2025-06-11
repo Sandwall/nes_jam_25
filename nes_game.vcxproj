@@ -95,7 +95,7 @@
     <ClCompile Include="src\engine\input.cpp" />
     <ClCompile Include="src\engine\libs.cpp" />
     <ClCompile Include="src\engine\image_asset.cpp" />
-    <ClCompile Include="src\game\collision.cpp" />
+    <ClCompile Include="src\game\entity.cpp" />
     <ClCompile Include="src\game\world.cpp" />
     <ClCompile Include="src\game\player.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -107,7 +107,6 @@
     <ClInclude Include="src\engine\image_asset.h" />
     <ClInclude Include="src\engine\nes_apu.hpp" />
     <ClInclude Include="src\engine\nsf.hpp" />
-    <ClInclude Include="src\game\collision.h" />
     <ClInclude Include="src\game\entity.h" />
     <ClInclude Include="src\game\world.h" />
     <ClInclude Include="src\game\player.h" />

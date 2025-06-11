@@ -4,16 +4,22 @@
 #include "engine/image_asset.h"
 #include "engine/gfx.h"
 
-#include "collision.h"
-
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_stdinc.h>
 
 #include <simdjson.h>
 using namespace simdjson;
 
-SDL_Rect LdtkLevel::get_bounding_box() {
+SDL_Rect LdtkLevel::get_bbox() const {
 	return { pxWorldX, pxWorldY, pxWidth, pxHeight };
+}
+
+SDL_FRect LdtkLevel::get_bboxf() const {
+	return {
+		static_cast<float>(pxWorldX),
+		static_cast<float>(pxWorldY),
+		static_cast<float>(pxWidth),
+		static_cast<float>(pxHeight)
+	};
 }
 
 static inline const char* copy_to_arena(std::string_view str, mems::Arena& arena) {
@@ -67,8 +73,10 @@ const char* GameWorld::_get_parent_dir(const char* path) {
 	return returnPath;
 }
 
-void GameWorld::init(const char* path, GameContext& ctx) {
-	arena.alloc();
+void GameWorld::init(const char* path) {
+	// We'll give the arena 10MB to work with
+	arena.alloc(10 * 1000 * 1000);
+
 	parentDirPath = _get_parent_dir(path);
 	padded_string jsonString = padded_string::load(path);
 	simdjson::ondemand::document doc = GET_JSON_PARSER->iterate(jsonString);
@@ -89,7 +97,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 		// NOTE(sand): take care to read these in the same order they are in the json document
 		def.widthCells = static_cast<int>(tilesetDef["__cWid"]);
 		def.heightCells = static_cast<int>(tilesetDef["__cHei"]);
-		//def.identifier = copy_to_arena(tilesetDef["identifier"], arena);
+		def.identifier = copy_to_arena(tilesetDef["identifier"], arena);
 		def.uid = static_cast<int>(tilesetDef["uid"]);
 		def.relPath = copy_to_arena(tilesetDef["relPath"], arena);
 		def.cellSize = static_cast<int>(tilesetDef["tileGridSize"]);
@@ -154,7 +162,7 @@ void GameWorld::init(const char* path, GameContext& ctx) {
 
 				// load gridTiles
 				auto gridTilesArray = layerInst["gridTiles"].get_array();
-				li.nData = gridTilesArray.count_elements();
+				li.nData = static_cast<int>(gridTilesArray.count_elements());
 				li.gridTile.data = static_cast<LdtkGridTileInstance*>(arena.push(sizeof(LdtkGridTileInstance) * li.nData));
 				int k = 0;
 				for (auto tile : gridTilesArray) {
@@ -206,15 +214,39 @@ void GameWorld::load_assets(TextureAtlas& atlas) {
 	}
 }
 
-void GameWorld::render(Gfx& gfx) {
-	for (int i = 0; i < nLevels; i++) {
-		LdtkLevel& level = levels[i];
+void GameWorld::render(Gfx& gfx, const GameContext& ctx) {
+	const SDL_FRect cameraRect = gfx.cam_bboxf();
+
+
+	for (int i = 0; i < ctx.nProcessRooms; i++) {
+		const LdtkLevel& level = *ctx.processRooms[i];
+		const SDL_FRect levelRect = level.get_bboxf();
 
 		// skip rendering level if it is not visible
-		if (!coll::rect_rect(
-			static_cast<int>(gfx.cameraPos.x), static_cast<int>(gfx.cameraPos.y), Gfx::nesWidth, Gfx::nesHeight,
-			level.pxWorldX, level.pxWorldY, level.pxWidth, level.pxHeight)
-			) continue;
+		if (!SDL_HasRectIntersectionFloat(&cameraRect, &levelRect)) continue;
+
+		for (int j = 0; j < level.nLayers; j++) {
+			LdtkLayerInstance& li = level.layers[j];
+			if (li.type == LdtkLayerInstance::TILE) {
+				const uint32_t atlasIdx = li.gridTile.tileset->atlasIdx;
+				const int tileSize = li.gridTile.tileset->cellSize;
+
+				for (int k = 0; k < li.nData; k++) {
+					const LdtkGridTileInstance& tile = li.gridTile.data[k];
+					gfx.queue_sprite(tile.layerX, tile.layerY, atlasIdx, { tile.srcX, tile.srcY, tileSize, tileSize }, true);
+				}
+			}
+		}
+	}
+
+
+	/*
+	for (int i = 0; i < nLevels; i++) {
+		LdtkLevel& level = levels[i];
+		const SDL_FRect levelRect = level.get_bboxf();
+
+		// skip rendering level if it is not visible
+		if (!SDL_HasRectIntersectionFloat(&cameraRect, &levelRect)) continue;
 
 		for (int j = 0; j < level.nLayers; j++) {
 			LdtkLayerInstance& li = level.layers[j];
@@ -229,4 +261,5 @@ void GameWorld::render(Gfx& gfx) {
 			}
 		}
 	}
+	*/
 }

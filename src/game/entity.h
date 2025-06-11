@@ -2,17 +2,22 @@
 
 #include "engine/image_asset.h"
 
-struct GameContext;
-struct Gfx;
+#include <SDL3/SDL_rect.h>
 
 struct Entity {
 	bool active = true;
-	float x = 0, y = 0;
+
+	SDL_FPoint pos;
+	SDL_FPoint origin;
+	SDL_FPoint collBoxSize;
 
 	SpriteAnimator animator = {};
 	SpriteSheet* sheet = nullptr; // loaded in by the atlas
 
-	virtual void load(TextureAtlas& atlas) = 0;
-	virtual void update(const GameContext& ctx) = 0;
-	virtual void render(Gfx& gfx) = 0;
+	virtual void load(const TextureAtlas& atlas) = 0;
+	virtual void update(const struct GameContext& ctx) = 0;
+	virtual void render(struct Gfx& gfx) = 0;
+
+	bool is_in_room(const struct LdtkLevel* level);
+	SDL_FRect get_cboxf();
 };

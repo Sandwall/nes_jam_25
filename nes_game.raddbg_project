@@ -13,8 +13,3 @@ target:
   enabled: 1
   working_directory: ""
 }
-breakpoint:
-{
-  source_location: "src/main.cpp:60:1"
-  hit_count: 1
-}
