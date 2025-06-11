@@ -28,7 +28,8 @@ struct LdtkEnumDef {
 
 struct LdtkTilesetDef {
 	const char* relPath;
-	const char* identifier;    // this will be used for SubTexture retrieval, so it must match the SubTexture key
+	//const char* identifier;  // ~~this will be used for SubTexture retrieval, so it must match the SubTexture key~~
+	uint32_t atlasIdx;         // NOTE(sand): forget the above, we'll just store the indices in the atlas directly here
 	int uid;                   // this is used to reference the tileset by LdtkLayerInstances
 	
 	// tileGridSize, __cWid, __cHei
@@ -139,5 +140,6 @@ struct GameWorld {
 	bool shouldDrawInt = true;
 	void render(Gfx& gfx);
 private:
+	const char* _get_parent_dir(const char* path);
 	mems::Arena arena;
 };

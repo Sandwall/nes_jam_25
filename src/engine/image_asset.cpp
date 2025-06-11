@@ -209,10 +209,13 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 
 	for (auto frameData : framesVal) {
 		auto frameRect = frameData["frame"];
-		sheet->frames[i].source.x = frameRect["x"];
-		sheet->frames[i].source.y = frameRect["y"];
-		sheet->frames[i].source.w = frameRect["w"];
-		sheet->frames[i].source.h = frameRect["h"];
+		// NOTE(sand): it might be a bit odd but we have to manually cast here and any other simdjson field lookup
+		// because the cast type deduction might encounter an error for whatever reason (?)
+		// If you encounter an error when reading fields from simdjson, this might be the solution
+		sheet->frames[i].source.x = static_cast<int>(frameRect["x"]);
+		sheet->frames[i].source.y = static_cast<int>(frameRect["y"]);
+		sheet->frames[i].source.w = static_cast<int>(frameRect["w"]);
+		sheet->frames[i].source.h = static_cast<int>(frameRect["h"]);
 		sheet->frames[i].duration = static_cast<float>(frameData["duration"]) / 1000.0f;
 		i++;
 	}
@@ -223,11 +226,11 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta*) * sheet->nAnimations));
 
 	for (auto frameTag : frameTags) {
-		sheet->anims[i].startFrame = frameTag["from"];
-		sheet->anims[i].endFrame =   frameTag["to"];
+		sheet->anims[i].startFrame = static_cast<int>(frameTag["from"]);
+		sheet->anims[i].endFrame = static_cast<int>(frameTag["to"]);
 		sheet->anims[i].type = AnimationMeta::FORWARD;
 
-		std::string_view dirStr = frameTag["direction"];
+		std::string_view dirStr = frameTag["direction"].get_string();
 		
 		// don't need to check against "forward" since we're assuming it by default
 		if (0 == dirStr.compare("pingpong")) {

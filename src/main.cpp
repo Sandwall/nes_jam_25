@@ -52,7 +52,9 @@ int main(int argc, char** argv) {
 	atlas.add_to_atlas("enemy1", "./res/enemy1/enemy1.png", "./res/enemy1/enemy1.json");
 
 	player.load(atlas);
-	//world.init("./res/world1.ldtk", game);
+
+	world.init("./res/world1.ldtk", game);
+	world.load_assets(atlas);
 
 	atlas.pack_atlas();
 	gfx.upload_atlas(atlas);
@@ -104,6 +106,7 @@ int main_loop() {
 		input.end_frame();
 		gfx.begin_frame();
 
+		world.render(gfx);
 		player.render(gfx);
 		gfx.queue_text(16, 16, "NES Game Jam!");
 
