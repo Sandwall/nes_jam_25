@@ -23,7 +23,6 @@
 
 constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
 
-constexpr float setVelocityX{20.0f};
 
 Input input;
 Gfx gfx;
@@ -43,12 +42,26 @@ GameContext game = {
 	.player = &player,
 };
 
+int init(); void cleanup();
 int main_loop();
 
 int main(int argc, char** argv) {
 	if (!SDL_Init(SDL_INIT_EVENTS | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD))
 		return -1;
 
+	if (-1 == init())
+		return -1;
+
+	int returnVal = main_loop();
+	
+	cleanup();
+	SDL_Quit();
+}
+
+void update_camera();
+void update_process_rooms();
+
+int init() {
 	mems::init();
 	GameContext::init();
 
@@ -61,9 +74,9 @@ int main(int argc, char** argv) {
 	// load world (this happens before atlas creation because we need to prepare relPaths of the tilesets)
 	world.init("./res/world1.ldtk");
 
-	if (!enemies.empty()) enemies.clear();
+	enemies.clear();
 	enemies.resize(3);
-	
+
 	// create atlas and load all assets
 	atlas.create(1024, 1024);
 	gfx.fontIdx = atlas.add_to_atlas("font", "./res/font.png");
@@ -86,22 +99,20 @@ int main(int argc, char** argv) {
 	enemies[2].spawn(300.0f, 100.0f);
 
 	// Set the velocities of the different enemies or use for loop and set the velocities to the same value for every enemy
-	enemies[0].set_velocity(5.0f, 0.0f);
-	enemies[1].set_velocity(5.0f, 0.0f);
-	enemies[2].set_velocity(5.0f, 0.0f);
+	enemies[0].velocity = { 5.0f, 0.0f };
+	enemies[1].velocity = { 5.0f, 0.0f };
+	enemies[2].velocity = { 5.0f, 0.0f };
 
 	SDL_ShowWindow(game.window);
-	int returnVal = main_loop();
-	
+}
+
+void cleanup() {
 	gfx.cleanup();
 	atlas.destroy();
 	SDL_DestroyWindow(game.window);
 	GameContext::cleanup();
 	mems::close();
-	SDL_Quit();
 }
-
-void camera_update();
 
 int main_loop() {
 	while (true) {
@@ -128,53 +139,21 @@ int main_loop() {
 			}
 		}
 
+		if (input.b.clicked()) {
+			cleanup();
+			init();
+		}
+
 		//
 		// update
 		//
-
-		// update process rooms and player room
-		memset(game.processRooms, 0, sizeof(LdtkLevel*) * GameContext::NUM_PROCESS_ROOMS);
-		game.playerRoom = nullptr;
-		game.nProcessRooms = 0;
-		SDL_FRect camBbox = gfx.cam_bboxf();
-
-		for (int i = 0; i < world.nLevels; i++) {
-			LdtkLevel& level = world.levels[i];
-			const SDL_FRect levelBbox = level.get_bboxf();
-
-			if (player.is_in_room(&level))
-				game.playerRoom = &level;
-
-			if (SDL_HasRectIntersectionFloat(&camBbox, &levelBbox)) {
-				game.processRooms[game.nProcessRooms++] = &level;
-				if (game.nProcessRooms >= GameContext::NUM_PROCESS_ROOMS)
-					break;
-			}
-		}
+		update_process_rooms();
 
 		// update entities
 		player.update(game);
-
 		for (int i = 0; i < enemies.size(); i++) enemies[i].update(game); // Update all enemies
 
-		enemies[0].enemyTime += game.delta; // Increase enemy time by delta time of the game
-
-		// Change the velocity of the enemy after certain time for testing
-		if (enemies[0].enemyTime >= 0.0f && enemies[0].enemyTime <= 2.0f)
-		{
-			// Set the enemy's velocity to forward current velocity
-			if (enemies[0].velocity.x != setVelocityX) enemies[0].velocity.x = setVelocityX;
-		}
-
-		else if (enemies[0].enemyTime > 2.0f && enemies[0].enemyTime <= 4.0f)
-		{
-			// Set the enemy's velocity to reverse current velocity
-			if (enemies[0].velocity.x != -setVelocityX) enemies[0].velocity.x = -setVelocityX;
-		}
-
-		else if (enemies[0].enemyTime > 4.0f) enemies[0].enemyTime = 0.0f;
-
-		camera_update();
+		update_camera();
 		input.end_frame();
 
 		//
@@ -203,17 +182,56 @@ int main_loop() {
 }
 
 constexpr float CAM_SPEED = 7.5f;
-void camera_update() {
+void update_camera() {
 	int targetX = player.pos.x - (Gfx::nesWidth / 2);
 	int targetY = player.pos.y - (Gfx::nesHeight / 2);
 
-	if (game.playerRoom) {
-		const LdtkLevel& room = *game.playerRoom;
-		targetX = tim::clamp(targetX, room.pxWorldX, room.pxWidth - Gfx::nesWidth);
-		targetY = tim::clamp(targetY, room.pxWorldY, room.pxHeight - Gfx::nesHeight);
+	// find room that player overlaps with the most
+	const SDL_FRect playerRect = player.get_cboxf();
+	float maxArea = 0;
+	const LdtkLevel* playerRoom = nullptr;
+	for (int i = 0; i < game.nPlayerRooms; i++) {
+		const LdtkLevel& room = *game.playerRooms[i];
+		const SDL_FRect roomRect = room.get_bboxf();
+
+		SDL_FRect intersection = { 0 };
+		SDL_GetRectIntersectionFloat(&playerRect, &roomRect, &intersection);
+		
+		const float area = intersection.w * intersection.h;
+		if (area > maxArea) {
+			maxArea = area;
+			playerRoom = &room;
+		}
+	}
+
+	// if we even had a most overlapped room, then clamp target coordinates to that room
+	if (playerRoom) {
+		targetX = tim::clamp(targetX, playerRoom->pxWorldX, playerRoom->pxWidth - Gfx::nesWidth);
+		targetY = tim::clamp(targetY, playerRoom->pxWorldY, playerRoom->pxHeight - Gfx::nesHeight);
 	}
 
 	gfx.cameraPos.x = tim::filerp32(gfx.cameraPos.x, targetX, CAM_SPEED, game.delta);
 	gfx.cameraPos.y = tim::filerp32(gfx.cameraPos.y, targetY, CAM_SPEED, game.delta);
+}
 
+void update_process_rooms() {
+	memset(game.processRooms, 0, sizeof(LdtkLevel*) * GameContext::NUM_PROCESS_ROOMS);
+	memset(game.playerRooms, 0, sizeof(LdtkLevel*) * GameContext::NUM_PROCESS_ROOMS);
+	game.nProcessRooms = 0;
+	game.nPlayerRooms = 0;
+	const SDL_FRect camBbox = gfx.cam_bboxf();
+	const SDL_FRect playerCbox = player.get_cboxf();
+
+	for (int i = 0; i < world.nLevels; i++) {
+		LdtkLevel& level = world.levels[i];
+		const SDL_FRect levelBbox = level.get_bboxf();
+
+		if (SDL_HasRectIntersectionFloat(&playerCbox, &levelBbox) && game.nPlayerRooms < GameContext::NUM_PROCESS_ROOMS) {
+			game.playerRooms[game.nPlayerRooms++] = &level;
+		}
+
+		if (SDL_HasRectIntersectionFloat(&camBbox, &levelBbox) < game.nProcessRooms < GameContext::NUM_PROCESS_ROOMS) {
+			game.processRooms[game.nProcessRooms++] = &level;
+		}
+	}
 }

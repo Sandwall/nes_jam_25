@@ -93,8 +93,8 @@ struct SpriteAnimator {
 
 	// internal
 	float timer;
-	int currentFrame : (sizeof(int) - 1);
-	bool pingpongForward : 1 = true;
+	int currentFrame : 31;
+	int pingpongForward : 1 = true;
 
 	void init(uint32_t sprite);
 	void start(int anim, const SpriteSheet& sheet);

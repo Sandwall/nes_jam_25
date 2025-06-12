@@ -7,9 +7,12 @@
 struct Entity {
 	bool active = true;
 
+	SDL_FPoint prevPos;
 	SDL_FPoint pos;
 	SDL_FPoint origin;
 	SDL_FPoint collBoxSize;
+
+	SDL_FPoint velocity;
 
 	SpriteAnimator animator = {};
 	SpriteSheet* sheet = nullptr; // loaded in by the atlas

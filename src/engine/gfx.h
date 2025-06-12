@@ -27,8 +27,10 @@ struct Gfx {
 	// always draws text @ font height 8
 	void queue_text(int x, int y, const char* text, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
-	void queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
-	void queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src,
+		bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f }, bool flipH = false, bool flipV = false);
+	void queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src,
+		bool useCamera = true, const SDL_FColor& color = { 1.0f, 1.0f, 1.0f, 1.0f }, bool flipH = false, bool flipV = false);
 
 
 	// these are commented because the compiler has trouble with overloads if you omit the color argument

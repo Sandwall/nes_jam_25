@@ -389,7 +389,7 @@ void Gfx::queue_text(int x, int y, const char* text, const SDL_FColor& color) {
 	}
 }
 
-void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
+void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera, const SDL_FColor& color, bool flipH, bool flipV) {
 	//SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
 	//SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
 
@@ -410,15 +410,16 @@ void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& s
 		dest.y -= cameraPos.y;
 	}
 
-	SDL_RenderTexture(renderer, textureAtlas, &fSrc, &dest);
+	SDL_FlipMode flipMode = static_cast<SDL_FlipMode>((flipH ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE) | (flipV ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE));
+	SDL_RenderTextureRotated(renderer, textureAtlas, &fSrc, &dest, 0.0, nullptr, flipMode);
 }
 
 
-void Gfx::queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera, const SDL_FColor& color) {
+void Gfx::queue_sprite(int x, int y, uint32_t spriteIdx, const SDL_Rect& src, bool useCamera, const SDL_FColor& color, bool flipH, bool flipV) {
 	if (spriteIdx == TextureAtlas::INVALID_IDX)
 		return;
 
-	queue_sprite(x, y, spriteAtlas->subTextures[spriteIdx], src, useCamera, color);
+	queue_sprite(x, y, spriteAtlas->subTextures[spriteIdx], src, useCamera, color, flipH, flipV);
 }
 
 /*

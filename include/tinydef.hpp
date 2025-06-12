@@ -159,6 +159,11 @@ namespace tim {
 		return x > 0 ? x : -x;
 	}
 
+	// https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+	template <typename T> int sign(T val) {
+		return (T(0) < val) - (val < T(0));
+	}
+
 	// takes a position and a length, and just returns an index into a circular buffer
 	template<typename T>
 	constexpr T circ_idx(T i, T len) requires ttp::Integral<T> {

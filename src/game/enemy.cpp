@@ -7,8 +7,9 @@
 
 #include "game/world.h"
 
-void Enemy::load(const TextureAtlas& atlas)
-{
+constexpr float enemySpeedX{ 20.0f };
+
+void Enemy::load(const TextureAtlas& atlas) {
 	animator.init(atlas.find_sprite("enemy1"));
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
@@ -24,18 +25,24 @@ void Enemy::load(const TextureAtlas& atlas)
 	}*/
 }
 
-void Enemy::spawn(const float& x_, const float& y_)
-{
-	pos = SDL_FPoint(x_, y_);
+void Enemy::spawn(float x, float y) {
+	pos = SDL_FPoint(x, y);
+	active = true;
 }
 
-void Enemy::set_velocity(const float& speedX_, const float& speedY_)
-{
-	velocity = { speedX_, speedY_ };
-}
+void Enemy::update(const GameContext& ctx) {
+	enemyTime += ctx.delta;
 
-void Enemy::update(const GameContext& ctx)
-{
+	// Change the velocity of the enemy after certain time for testing
+	if (enemyTime >= 0.0f && enemyTime <= 2.0f) {
+		// Set the enemy's velocity to forward current velocity
+		if (velocity.x != enemySpeedX) velocity.x = enemySpeedX;
+	} else if (enemyTime > 2.0f && enemyTime <= 4.0f) {
+		// Set the enemy's velocity to reverse current velocity
+		if (velocity.x != -enemySpeedX) velocity.x = -enemySpeedX;
+	} else if (enemyTime > 4.0f)
+		enemyTime = 0.0f;
+
 	// apply velocity to position
 	pos.x += velocity.x * ctx.delta;
 	pos.y += velocity.y * ctx.delta;
@@ -43,7 +50,6 @@ void Enemy::update(const GameContext& ctx)
 	animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
 }
 
-void Enemy::render(Gfx& gfx)
-{
+void Enemy::render(Gfx& gfx) {
 	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
 }

@@ -12,8 +12,11 @@ struct Player : Entity {
 		Max
 	};
 
-	tds::T2<float> velocity;
 	tds::StateMachine<Max> state;
+	bool isGrounded = false;
+	bool facingLeft = false;    // sprite faces right, so facingLeft = flipH
+
+	void move_with_collision(const struct GameContext& ctx);
 
 	void load(const struct TextureAtlas& atlas) override;
 	void update(const struct GameContext& ctx) override;

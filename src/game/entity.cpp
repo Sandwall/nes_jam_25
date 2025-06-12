@@ -1,6 +1,9 @@
 #include "entity.h"
 
-#include "world.h"
+#include <tinydef.hpp>
+
+#include "engine/game_context.h"
+#include "game/world.h"
 
 bool Entity::is_in_room(const LdtkLevel* level) {
 	if (!level) return false;

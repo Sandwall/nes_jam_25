@@ -31,9 +31,9 @@ struct GameContext {
 	// because we should have designed the level structure such that the next frame's processRooms must have
 	// at least one of the previous frames processRooms. 
 	static constexpr int NUM_PROCESS_ROOMS = 4;
-	int nProcessRooms;
+	int nProcessRooms, nPlayerRooms;
 	struct LdtkLevel* processRooms[NUM_PROCESS_ROOMS];
-	struct LdtkLevel* playerRoom;
+	struct LdtkLevel* playerRooms[NUM_PROCESS_ROOMS];
 
 
 	// NOTE(sand): simdjson complains if I try to forward declare simdjson::ondemand::parser (probably from the backend auto-select feature)

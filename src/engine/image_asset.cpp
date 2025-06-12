@@ -306,9 +306,13 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 }
 
 SDL_FRect SpriteAnimator::current_framef(const SpriteSheet& sheet) const {
-	SDL_FRect fr;
-	SDL_RectToFRect(&sheet.frames[currentFrame].source, &fr);
-	return fr;
+	SDL_Rect rect = current_frame(sheet);
+	return {
+		static_cast<float>(rect.x),
+		static_cast<float>(rect.y),
+		static_cast<float>(rect.w),
+		static_cast<float>(rect.h),
+	};
 }
 
 SDL_Rect SpriteAnimator::current_frame(const SpriteSheet& sheet) const {
