@@ -90,6 +90,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\audio.cpp" />
+    <ClCompile Include="src\engine\nes_apu.cpp" />
+    <ClCompile Include="src\engine\nsf.cpp" />
     <ClCompile Include="src\game\enemy.cpp" />
     <ClCompile Include="src\engine\game_context.cpp" />
     <ClCompile Include="src\engine\gfx.cpp" />
@@ -102,13 +105,14 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\audio.h" />
     <ClInclude Include="src\game\enemy.h" />
     <ClInclude Include="src\engine\game_context.h" />
     <ClInclude Include="src\engine\gfx.h" />
     <ClInclude Include="src\engine\input.h" />
     <ClInclude Include="src\engine\image_asset.h" />
-    <ClInclude Include="src\engine\nes_apu.hpp" />
-    <ClInclude Include="src\engine\nsf.hpp" />
+    <ClInclude Include="src\engine\nes_apu.h" />
+    <ClInclude Include="src\engine\nsf.h" />
     <ClInclude Include="src\game\entity.h" />
     <ClInclude Include="src\game\world.h" />
     <ClInclude Include="src\game\player.h" />

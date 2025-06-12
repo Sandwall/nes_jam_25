@@ -7,6 +7,8 @@
 #include "engine/gfx.h"
 #include "engine/game_context.h"
 #include "engine/image_asset.h"
+#include "engine/nsf.h"
+#include "engine/nes_apu.h"
 
 #include "game/player.h"
 #include "game/enemy.h"
@@ -42,7 +44,8 @@ GameContext game = {
 	.player = &player,
 };
 
-int init(); void cleanup();
+int init();
+void cleanup();
 int main_loop();
 
 int main(int argc, char** argv) {

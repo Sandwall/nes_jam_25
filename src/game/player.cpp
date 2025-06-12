@@ -179,7 +179,6 @@ void Player::move_with_collision(const GameContext& ctx) {
 					tileRect.x = static_cast<float>(x * cLayer.cellSize);
 					tileRect.y = static_cast<float>(y * cLayer.cellSize);
 					if (SDL_GetRectIntersectionFloat(&tileRect, &localPlayerCollRect, &intersectRect)) {
-						printf("found collision @ %f %f %f %f\n", tileRect.x, tileRect.y, tileRect.w, tileRect.h);
 						collisionDetected = true;
 						isGrounded = distanceTraveled > 0.0;
 						if (intersectRect.h > maxOverlap)
