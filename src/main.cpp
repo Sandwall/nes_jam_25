@@ -85,6 +85,7 @@ int init() {
 	gfx.fontIdx = atlas.add_to_atlas("font", "./res/font.png");
 	atlas.add_to_atlas("player", "./res/mainChar/mage3.png", "./res/mainChar/mage3.json");
 	atlas.add_to_atlas("enemy1", "./res/enemy1/enemy1.png", "./res/enemy1/enemy1.json");
+	atlas.add_to_atlas("projectile1", "./res/fireball1/fireball1.png", "./res/fireball1/fireball1.json");
 	world.load_assets(atlas);
 	atlas.pack_atlas();
 	gfx.upload_atlas(atlas);

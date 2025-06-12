@@ -14,6 +14,9 @@ void Enemy::load(const TextureAtlas& atlas) {
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
+	projectileObj = std::make_shared<Projectile>();
+	projectileObj->load(atlas);
+
 	/*if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
 		origin = { collBoxSize.x / 2.0f, collBoxSize.y };
@@ -32,6 +35,54 @@ void Enemy::spawn(float x, float y) {
 
 void Enemy::update(const GameContext& ctx) {
 	enemyTime += ctx.delta;
+	fireTime += ctx.delta;
+	fireLifetime += ctx.delta;
+
+	//printf("%f\n", fireTime);
+
+	if (fireTime >= fireCooldown)
+	{
+		projectiles.push_back(projectileObj);
+
+		for (std::shared_ptr<Projectile> projectile : projectiles)
+		{
+			projectile->spawn(pos.x, pos.y);
+		}
+
+		fireTime = 0.0f;
+	}
+
+	//printf(projectiles.size());
+
+	if (!projectiles.empty())
+	{
+		for (std::shared_ptr<Projectile> projectile : projectiles)
+		{
+			projectile->update(ctx);
+		}
+	}
+
+	if (!projectiles.empty())
+	{
+		for (std::shared_ptr<Projectile> projectile : projectiles)
+		{
+			for (std::vector<std::shared_ptr<Projectile>>::iterator it = projectiles.begin();
+				it != projectiles.end();)
+			{
+				if (fireLifetime >= 2.0f)
+				{
+					it = projectiles.erase(it);
+					printf("Erased element from vector\n");
+
+					fireLifetime = 0.0f;
+				}
+				else
+				{
+					it++;
+				}
+			}
+		}
+	}
 
 	// Change the velocity of the enemy after certain time for testing
 	if (enemyTime >= 0.0f && enemyTime <= 2.0f) {
@@ -52,4 +103,12 @@ void Enemy::update(const GameContext& ctx) {
 
 void Enemy::render(Gfx& gfx) {
 	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
+
+	if (!projectiles.empty())
+	{
+		for (std::shared_ptr<Projectile> projectile : projectiles)
+		{
+			projectile->render(gfx);
+		}
+	}
 }
