@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 
+constexpr int PROJECTILE_SIZE = 4;
+
 struct Enemy : public Entity {
 	float enemyTime;
 
@@ -17,12 +19,14 @@ struct Enemy : public Entity {
 	void render(struct Gfx& gfx) override;
 
 private:
-	std::shared_ptr<Projectile> projectileObj;
+	std::shared_ptr<Projectile> projectileObj[4];
 	std::vector<std::shared_ptr<Projectile>> projectiles;
 
 	float fireTime;
 	const float fireCooldown = 0.2f;
 	float fireLifetime;
+
+	int currentProjectile;
 };
 
 #endif

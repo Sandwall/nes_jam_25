@@ -14,8 +14,13 @@ void Enemy::load(const TextureAtlas& atlas) {
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
-	projectileObj = std::make_shared<Projectile>();
-	projectileObj->load(atlas);
+	currentProjectile = 0;
+
+	for (int i = 0; i < PROJECTILE_SIZE; i++)
+	{
+		projectileObj[i] = std::make_shared<Projectile>();
+		projectileObj[i]->load(atlas);
+	}
 
 	/*if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
@@ -42,11 +47,15 @@ void Enemy::update(const GameContext& ctx) {
 
 	if (fireTime >= fireCooldown)
 	{
-		projectiles.push_back(projectileObj);
+		projectiles.push_back(projectileObj[currentProjectile]);
 
 		for (std::shared_ptr<Projectile> projectile : projectiles)
 		{
-			projectile->spawn(pos.x, pos.y);
+			if (!projectileObj[currentProjectile]->active)
+			{
+				projectileObj[currentProjectile]->pos = { pos.x, pos.y };
+				projectile->spawn(projectileObj[currentProjectile]->pos.x, projectileObj[currentProjectile]->pos.y);
+			}
 		}
 
 		fireTime = 0.0f;
@@ -58,7 +67,7 @@ void Enemy::update(const GameContext& ctx) {
 	{
 		for (std::shared_ptr<Projectile> projectile : projectiles)
 		{
-			projectile->update(ctx);
+			if (projectileObj[currentProjectile]->active) projectile->update(ctx);
 		}
 	}
 
@@ -71,6 +80,12 @@ void Enemy::update(const GameContext& ctx) {
 			{
 				if (fireLifetime >= 2.0f)
 				{
+					projectileObj[currentProjectile]->active = false;
+					projectileObj[currentProjectile]->velocity.x = 0.0f;
+
+					if (currentProjectile <= PROJECTILE_SIZE - 1) currentProjectile += 1;
+					if (currentProjectile > PROJECTILE_SIZE - 1) currentProjectile = 0;
+
 					it = projectiles.erase(it);
 					printf("Erased element from vector\n");
 
@@ -108,7 +123,7 @@ void Enemy::render(Gfx& gfx) {
 	{
 		for (std::shared_ptr<Projectile> projectile : projectiles)
 		{
-			projectile->render(gfx);
+			if (projectileObj[currentProjectile]->active) projectile->render(gfx);
 		}
 	}
 }
