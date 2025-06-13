@@ -390,8 +390,8 @@ void Gfx::queue_text(int x, int y, const char* text, const SDL_FColor& color) {
 }
 
 void Gfx::queue_sprite(int x, int y, const SubTexture& subTex, const SDL_Rect& src, bool useCamera, const SDL_FColor& color, bool flipH, bool flipV) {
-	//SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
-	//SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
+	SDL_SetTextureColorModFloat(textureAtlas, color.r, color.g, color.b);
+	SDL_SetTextureAlphaModFloat(textureAtlas, color.a);
 
 	SDL_FRect dest = {
 		static_cast<float>(x),

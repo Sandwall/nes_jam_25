@@ -24,6 +24,7 @@ void Enemy::load(const TextureAtlas& atlas) {
 void Enemy::spawn(float x, float y) {
 	pos = SDL_FPoint(x, y);
 	active = true;
+	detectedPlayer = false;
 
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].active = false;
@@ -32,27 +33,41 @@ void Enemy::spawn(float x, float y) {
 
 void Enemy::update(const GameContext& ctx) {
 	movementTimer += ctx.delta;
-	
+
+	// update projectiles
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].update(ctx);
 	}
 
-	if (spottedPlayer) fireTimer += ctx.delta;
-	else { if (fireTimer != 0.0f) fireTimer = 0.0f; }
+	// check if player is within the enemy's detection range
+	float dx = ctx.player->pos.x - pos.x;
+	float dy = ctx.player->pos.y - pos.y;
+	float distance = sqrtf((dx * dx) + (dy * dy));
 
-	if (fireTimer >= FIRE_COOLDOWN && spottedPlayer) {
-		for (int i = 0; i < NUM_PROJECTILES; i++) {
-			if (!projectiles[i].active) 
-			{
-				/* Check if enemy is currently moving left or right and update the booleans based on it for reversing
-				the projectiles velocity */
-				if (velocity.x == enemySpeedX) projectiles[i].spawn(pos.x, pos.y, false);
-				else if (velocity.x == -enemySpeedX) projectiles[i].spawn(pos.x, pos.y, true);
-				break;
-			}
-		}
-
+	if (distance <= DETECTION_DISTANCE) {
+		detectedPlayer = true;
+	} else {
+		detectedPlayer = false;
 		fireTimer = 0.0f;
+	}
+
+	if (detectedPlayer) {
+		// we've spotted the player so we want to start shooting
+		fireTimer += ctx.delta;
+
+		if (fireTimer >= FIRE_COOLDOWN) {
+			for (int i = 0; i < NUM_PROJECTILES; i++) {
+				if (!projectiles[i].active) {
+					/* Check if enemy is currently moving left or right and update the booleans based on it for reversing
+					the projectiles velocity */
+					if (velocity.x >= 0.0f) projectiles[i].spawn(pos.x, pos.y, false);
+					else if (velocity.x < 0.0f) projectiles[i].spawn(pos.x, pos.y, true);
+					break;
+				}
+			}
+
+			fireTimer = 0.0f;
+		}
 	}
 
 	// Change the velocity of the enemy after certain time for testing
@@ -73,32 +88,17 @@ void Enemy::update(const GameContext& ctx) {
 }
 
 void Enemy::render(Gfx& gfx) {
-	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
+	SDL_FColor enemyColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	
+	if (detectedPlayer) {
+		enemyColor.b = 0.5f;
+		enemyColor.g = 0.5f;
+		// by this point, enemyColor is equal to { 1.0f, 0.5f, 0.5f, 1.0f }
+	}
+
+	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet), true, enemyColor);
 	
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].render(gfx);
 	}
-}
-
-void Enemy::shoot_at_player(Player& player_)
-{
-	if (player_.pos.x >= pos.x && player_.pos.x <= pos.x + playerDistanceX && velocity.x == enemySpeedX &&
-		player_.pos.y >= pos.y && player_.pos.y <= pos.y + playerDistanceY || // Enemy moving forward and below player
-		player_.pos.x >= pos.x && player_.pos.x <= pos.x + playerDistanceX && velocity.x == enemySpeedX &&
-		player_.pos.y <= pos.y && player_.pos.y >= pos.y - playerDistanceY || // Enemy moving forward and above player
-		player_.pos.x <= pos.x && player_.pos.x >= pos.x - playerDistanceX && velocity.x == -enemySpeedX &&
-		player_.pos.y <= pos.y && player_.pos.y >= pos.y - playerDistanceY || // Enemy moving backward and above
-		player_.pos.x <= pos.x && player_.pos.x >= pos.x - playerDistanceX && velocity.x == -enemySpeedX &&
-		player_.pos.y >= pos.y && player_.pos.y <= pos.y + playerDistanceY) // Enemy moving backward and below player
-	{
-		spottedPlayer = true;
-	}
-
-	else
-	{
-		spottedPlayer = false;
-	}
-
-	//printf("Player position x: %f, enemy position x: %f\n", player_.pos.x, pos.x);
-	//printf("Player position y: %f, enemy position y: %f\n", player_.pos.y, pos.y);
 }

@@ -16,7 +16,6 @@ struct Enemy : public Entity {
 	void load(const struct TextureAtlas& atlas) override;
 	void update(const struct GameContext& ctx) override;
 	void render(struct Gfx& gfx) override;
-	void shoot_at_player(struct Player& player_);
 
 private:
 	Projectile projectiles[NUM_PROJECTILES];
@@ -24,10 +23,8 @@ private:
 	static constexpr float FIRE_COOLDOWN = 0.4f;
 	float fireTimer;
 
-	static constexpr float playerDistanceX = 75.0f;
-	static constexpr float playerDistanceY = 30.0f;
-
-	bool spottedPlayer = false;
+	static constexpr float DETECTION_DISTANCE = 64.0f;
+	bool detectedPlayer;
 };
 
 #endif
