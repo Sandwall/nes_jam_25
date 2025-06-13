@@ -15,7 +15,7 @@ struct Entity {
 	SDL_FPoint velocity;
 
 	SpriteAnimator animator = {};
-	SpriteSheet* sheet = nullptr; // loaded in by the atlas
+	const SpriteSheet* sheet = nullptr; // loaded in by the atlas
 
 	virtual void load(const TextureAtlas& atlas) = 0;
 	virtual void update(const struct GameContext& ctx) = 0;

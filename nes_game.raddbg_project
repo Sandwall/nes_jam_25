@@ -1,8 +1,8 @@
 // raddbg 0.9.18 project file
 
+recent_file: path: "src/engine/image_asset.cpp"
 recent_file: path: "src/main.cpp"
 recent_file: path: "include/simdjson.h"
-recent_file: path: "src/engine/image_asset.cpp"
 recent_file: path: "src/game/player.cpp"
 recent_file: path: "src/engine/game_context.h"
 recent_file: path: "src/engine/texture.h"
@@ -12,4 +12,9 @@ target:
   executable: "bin/x64-Debug/nes_game.exe"
   enabled: 1
   working_directory: ""
+}
+breakpoint:
+{
+  source_location: "src/engine/image_asset.cpp:92:1"
+  hit_count: 3
 }

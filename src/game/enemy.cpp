@@ -14,116 +14,62 @@ void Enemy::load(const TextureAtlas& atlas) {
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
-	currentProjectile = 0;
+	origin = { 18.0f, 18.0f };
 
-	for (int i = 0; i < PROJECTILE_SIZE; i++)
-	{
-		projectileObj[i] = std::make_shared<Projectile>();
-		projectileObj[i]->load(atlas);
+	for (int i = 0; i < NUM_PROJECTILES; i++) {
+		projectiles[i].load(atlas);
 	}
-
-	/*if (sheet->frames) {
-		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
-		origin = { collBoxSize.x / 2.0f, collBoxSize.y };
-		collBoxSize.y *= 3.0f / 4.0f;
-	}
-	else {
-		collBoxSize = { 16.0f, 24.0f };
-		origin = { 8.0f, 32.0f };
-	}*/
 }
 
 void Enemy::spawn(float x, float y) {
 	pos = SDL_FPoint(x, y);
 	active = true;
+
+	for (int i = 0; i < NUM_PROJECTILES; i++) {
+		projectiles[i].active = false;
+	}
 }
 
 void Enemy::update(const GameContext& ctx) {
-	enemyTime += ctx.delta;
-	fireTime += ctx.delta;
-	fireLifetime += ctx.delta;
+	movementTimer += ctx.delta;
+	fireTimer += ctx.delta;
+	
+	for (int i = 0; i < NUM_PROJECTILES; i++) {
+		projectiles[i].update(ctx);
+	}
 
-	//printf("%f\n", fireTime);
-
-	if (fireTime >= fireCooldown)
-	{
-		projectiles.push_back(projectileObj[currentProjectile]);
-
-		for (std::shared_ptr<Projectile> projectile : projectiles)
-		{
-			if (!projectileObj[currentProjectile]->active)
-			{
-				projectileObj[currentProjectile]->pos = { pos.x, pos.y };
-				projectile->spawn(projectileObj[currentProjectile]->pos.x, projectileObj[currentProjectile]->pos.y);
+	if (fireTimer >= FIRE_COOLDOWN) {
+		for (int i = 0; i < NUM_PROJECTILES; i++) {
+			if (!projectiles[i].active) {
+				projectiles[i].spawn(pos.x, pos.y);
+				break;
 			}
 		}
 
-		fireTime = 0.0f;
-	}
-
-	//printf(projectiles.size());
-
-	if (!projectiles.empty())
-	{
-		for (std::shared_ptr<Projectile> projectile : projectiles)
-		{
-			if (projectileObj[currentProjectile]->active) projectile->update(ctx);
-		}
-	}
-
-	if (!projectiles.empty())
-	{
-		for (std::shared_ptr<Projectile> projectile : projectiles)
-		{
-			for (std::vector<std::shared_ptr<Projectile>>::iterator it = projectiles.begin();
-				it != projectiles.end();)
-			{
-				if (fireLifetime >= 2.0f)
-				{
-					projectileObj[currentProjectile]->active = false;
-					projectileObj[currentProjectile]->velocity.x = 0.0f;
-
-					if (currentProjectile <= PROJECTILE_SIZE - 1) currentProjectile += 1;
-					if (currentProjectile > PROJECTILE_SIZE - 1) currentProjectile = 0;
-
-					it = projectiles.erase(it);
-					printf("Erased element from vector\n");
-
-					fireLifetime = 0.0f;
-				}
-				else
-				{
-					it++;
-				}
-			}
-		}
+		fireTimer = 0.0f;
 	}
 
 	// Change the velocity of the enemy after certain time for testing
-	if (enemyTime >= 0.0f && enemyTime <= 2.0f) {
+	if (movementTimer >= 0.0f && movementTimer <= 2.0f) {
 		// Set the enemy's velocity to forward current velocity
 		if (velocity.x != enemySpeedX) velocity.x = enemySpeedX;
-	} else if (enemyTime > 2.0f && enemyTime <= 4.0f) {
+	} else if (movementTimer > 2.0f && movementTimer <= 4.0f) {
 		// Set the enemy's velocity to reverse current velocity
 		if (velocity.x != -enemySpeedX) velocity.x = -enemySpeedX;
-	} else if (enemyTime > 4.0f)
-		enemyTime = 0.0f;
+	} else if (movementTimer > 4.0f)
+		movementTimer = 0.0f;
 
 	// apply velocity to position
 	pos.x += velocity.x * ctx.delta;
 	pos.y += velocity.y * ctx.delta;
 
-	animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
+	animator.update(ctx.delta, *sheet);
 }
 
 void Enemy::render(Gfx& gfx) {
 	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
-
-	if (!projectiles.empty())
-	{
-		for (std::shared_ptr<Projectile> projectile : projectiles)
-		{
-			if (projectileObj[currentProjectile]->active) projectile->render(gfx);
-		}
+	
+	for (int i = 0; i < NUM_PROJECTILES; i++) {
+		projectiles[i].render(gfx);
 	}
 }

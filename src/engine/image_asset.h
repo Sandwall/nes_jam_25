@@ -15,7 +15,7 @@ struct SubTexture {
 	int x, y;
 	int width, height;
 
-	struct SpriteSheet* sheetData;
+	const struct SpriteSheet* sheetData;
 	char key[KEY_LENGTH];
 private:
 	// Only TextureAtlas gets to manage the CPU side texture data

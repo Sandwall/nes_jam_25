@@ -4,13 +4,11 @@
 #include "entity.h"
 #include "projectile.h"
 #include <tinydef.hpp>
-#include <vector>
-#include <memory>
 
-constexpr int PROJECTILE_SIZE = 4;
+constexpr int NUM_PROJECTILES = 4;
 
 struct Enemy : public Entity {
-	float enemyTime;
+	float movementTimer;
 
 	void spawn(float x, float y);
 
@@ -19,14 +17,10 @@ struct Enemy : public Entity {
 	void render(struct Gfx& gfx) override;
 
 private:
-	std::shared_ptr<Projectile> projectileObj[4];
-	std::vector<std::shared_ptr<Projectile>> projectiles;
+	Projectile projectiles[NUM_PROJECTILES];
 
-	float fireTime;
-	const float fireCooldown = 0.2f;
-	float fireLifetime;
-
-	int currentProjectile;
+	static constexpr float FIRE_COOLDOWN = 0.4f;
+	float fireTimer;
 };
 
 #endif

@@ -113,10 +113,10 @@ void Player::move_with_collision(const GameContext& ctx) {
 		localPlayerCollRect.x -= room.pxWorldX;
 		localPlayerCollRect.y -= room.pxWorldY;
 
-		left = tim::clamp(0, static_cast<int>(localPlayerCollRect.x) / layer.cellSize, layer.widthCells - 1);
-		right = tim::clamp(0, static_cast<int>(localPlayerCollRect.x + localPlayerCollRect.w) / layer.cellSize, layer.widthCells - 1);
-		top = tim::clamp(0, static_cast<int>(localPlayerCollRect.y) / layer.cellSize, layer.heightCells - 1);
-		bottom = tim::clamp(0, static_cast<int>(localPlayerCollRect.y + localPlayerCollRect.h) / layer.cellSize, layer.heightCells - 1);
+		left = tim::clamp(static_cast<int>(localPlayerCollRect.x) / layer.cellSize, 0, layer.widthCells - 1);
+		right = tim::clamp(static_cast<int>(localPlayerCollRect.x + localPlayerCollRect.w) / layer.cellSize, 0, layer.widthCells - 1);
+		top = tim::clamp(static_cast<int>(localPlayerCollRect.y) / layer.cellSize, 0, layer.heightCells - 1);
+		bottom = tim::clamp(static_cast<int>(localPlayerCollRect.y + localPlayerCollRect.h) / layer.cellSize, 0, layer.heightCells - 1);
 	};
 
 	// apply x velocity to position
@@ -171,6 +171,7 @@ void Player::move_with_collision(const GameContext& ctx) {
 		update_bounds(room, cLayer);
 		tileRect.w = static_cast<float>(cLayer.cellSize);
 		tileRect.h = static_cast<float>(cLayer.cellSize);
+
 
 		float maxOverlap = 0; bool collisionDetected = false;
 		for (int y = top; y <= bottom; y++) {

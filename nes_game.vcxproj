@@ -115,6 +115,7 @@
     <ClInclude Include="src\engine\nes_apu.h" />
     <ClInclude Include="src\engine\nsf.h" />
     <ClInclude Include="src\game\entity.h" />
+    <ClInclude Include="src\game\projectile.h" />
     <ClInclude Include="src\game\world.h" />
     <ClInclude Include="src\game\player.h" />
   </ItemGroup>

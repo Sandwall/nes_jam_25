@@ -203,7 +203,7 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	// load source frame rects
 	auto framesVal = sheetDoc["frames"].get_array();
 	sheet->nFrames = static_cast<int>(framesVal.count_elements());
-	sheet->frames = static_cast<AnimationFrame*>(arena.push_zero(sizeof(AnimationFrame*) * sheet->nFrames));
+	sheet->frames = static_cast<AnimationFrame*>(arena.push_zero(sizeof(AnimationFrame) * sheet->nFrames));
 	int i = 0;    // simdjson's ondemand API with regards to array iteration does not give us the index,
 	              // so we need to manually keep track of it
 
@@ -223,23 +223,34 @@ SpriteSheet* SpriteSheet::load(const char* jsonPath, mems::Arena& arena) {
 	i = 0;
 	auto frameTags = sheetDoc["meta"]["frameTags"];
 	sheet->nAnimations = static_cast<int>(frameTags.count_elements());
-	sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta*) * sheet->nAnimations));
 
-	for (auto frameTag : frameTags) {
-		sheet->anims[i].startFrame = static_cast<int>(frameTag["from"]);
-		sheet->anims[i].endFrame = static_cast<int>(frameTag["to"]);
-		sheet->anims[i].type = AnimationMeta::FORWARD;
+	if (0 == sheet->nAnimations) {
+		// make one big animation with the entire sheet
+		sheet->nAnimations = 1;
+		sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta)));
 
-		std::string_view dirStr = frameTag["direction"].get_string();
-		
-		// don't need to check against "forward" since we're assuming it by default
-		if (0 == dirStr.compare("pingpong")) {
-			sheet->anims[i].type = AnimationMeta::PINGPONG;
-		} else if (0 == dirStr.compare("backward")) {
-			sheet->anims[i].type = AnimationMeta::BACKWARD;
+		sheet->anims->startFrame = 0;
+		sheet->anims->endFrame = sheet->nFrames - 1;
+		sheet->anims->type = AnimationMeta::FORWARD;
+	} else {
+		sheet->anims = static_cast<AnimationMeta*>(arena.push_zero(sizeof(AnimationMeta) * sheet->nAnimations));
+
+		for (auto frameTag : frameTags) {
+			sheet->anims[i].startFrame = static_cast<int>(frameTag["from"]);
+			sheet->anims[i].endFrame = static_cast<int>(frameTag["to"]);
+
+			std::string_view dirStr = frameTag["direction"].get_string();
+
+			// don't need to check against "forward" since we're assuming it by default
+			if (0 == dirStr.compare("pingpong")) {
+				sheet->anims[i].type = AnimationMeta::PINGPONG;
+			}
+			else if (0 == dirStr.compare("backward")) {
+				sheet->anims[i].type = AnimationMeta::BACKWARD;
+			}
+
+			i++;
 		}
-
-		i++;
 	}
 
 	return sheet;

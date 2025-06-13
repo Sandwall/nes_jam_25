@@ -7,31 +7,48 @@
 
 #include "game/world.h"
 
-void Projectile::spawn(float x, float y)
-{
+void Projectile::spawn(float x, float y) {
 	pos = SDL_FPoint(x, y);
 	active = true;
+	lifeTimer = 0.0f;
+	velocity = { 100.0f, 0.0f };
+	origin = { 8.0f, 8.0f };
 }
 
-void Projectile::load(const struct TextureAtlas& atlas)
-{
+void Projectile::load(const struct TextureAtlas& atlas) {
 	animator.init(atlas.find_sprite("projectile1"));
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
+
+	velocity = { 0.0f, 0.0f };
+	lifeTimer = LIFETIME + 1.0f;
+	active = false;
 }
 
-void Projectile::update(const struct GameContext& ctx)
-{
-	velocity.x += -10.0f; // Move to left for testing
+void Projectile::update(const struct GameContext& ctx) {
+	if (active) {
+		lifeTimer += ctx.delta;
 
-	// apply velocity to position
-	pos.x += velocity.x * ctx.delta;
-	pos.y += velocity.y * ctx.delta;
+		if (lifeTimer >= LIFETIME) {
+			active = false;
+			return;
+		}
 
-	animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
+		velocity.x += 50.0f * ctx.delta; // Move to right for testing
+
+		// apply velocity to position
+		pos.x += velocity.x * ctx.delta;
+		pos.y += velocity.y * ctx.delta;
+		animator.update(ctx.delta, *sheet);
+	}
 }
 
-void Projectile::render(struct Gfx& gfx)
-{
-	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
+void Projectile::render(struct Gfx& gfx) {
+	if (active) {
+		gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
+	}
+
+	if (!active) {
+		int i = 0;
+	}
 }

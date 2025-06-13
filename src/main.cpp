@@ -78,7 +78,7 @@ int init() {
 	world.init("./res/world1.ldtk");
 
 	enemies.clear();
-	enemies.resize(3);
+	enemies.resize(1);
 
 	// create atlas and load all assets
 	atlas.create(1024, 1024);
@@ -99,13 +99,13 @@ int init() {
 
 	// Spawn enemies at different locations
 	enemies[0].spawn(50.0f, 100.0f);
-	enemies[1].spawn(150.0f, 100.0f);
-	enemies[2].spawn(300.0f, 100.0f);
+	//enemies[1].spawn(150.0f, 100.0f);
+	//enemies[2].spawn(300.0f, 100.0f);
 
 	// Set the velocities of the different enemies or use for loop and set the velocities to the same value for every enemy
 	enemies[0].velocity = { 5.0f, 0.0f };
-	enemies[1].velocity = { 5.0f, 0.0f };
-	enemies[2].velocity = { 5.0f, 0.0f };
+	//enemies[1].velocity = { 5.0f, 0.0f };
+	//enemies[2].velocity = { 5.0f, 0.0f };
 
 	SDL_ShowWindow(game.window);
 }
@@ -118,15 +118,21 @@ void cleanup() {
 	mems::close();
 }
 
+bool paused = false;
 int main_loop() {
 	while (true) {
 		// timer start - this is meant for framelimiting
-		const Uint64 startFrame = SDL_GetTicksNS();
+		Uint64 startFrame = SDL_GetTicksNS();
 
 		// process events
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
+			case SDL_EVENT_WINDOW_MOVED:
+			case SDL_EVENT_WINDOW_RESIZED:
+				startFrame = SDL_GetTicksNS();
+				break;
+
 			case SDL_EVENT_QUIT:
 				return EXIT_SUCCESS;
 
@@ -147,17 +153,23 @@ int main_loop() {
 			cleanup();
 			init();
 		}
+		
+		if (input.start.clicked())
+			paused = !paused;
 
 		//
 		// update
 		//
-		update_process_rooms();
+		if (!paused) {
+			update_process_rooms();
 
-		// update entities
-		player.update(game);
-		for (int i = 0; i < enemies.size(); i++) enemies[i].update(game); // Update all enemies
+			// update entities
+			player.update(game);
+			for (int i = 0; i < enemies.size(); i++) enemies[i].update(game); // Update all enemies
 
-		update_camera();
+			update_camera();
+		}
+
 		input.end_frame();
 
 		//
