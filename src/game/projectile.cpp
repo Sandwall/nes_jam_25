@@ -7,12 +7,14 @@
 
 #include "game/world.h"
 
-void Projectile::spawn(float x, float y) {
+void Projectile::spawn(float x, float y, bool reverseProjectile_) {
 	pos = SDL_FPoint(x, y);
 	active = true;
 	lifeTimer = 0.0f;
 	velocity = { 100.0f, 0.0f };
 	origin = { 8.0f, 8.0f };
+
+	reverseProjectile = reverseProjectile_;
 }
 
 void Projectile::load(const struct TextureAtlas& atlas) {
@@ -34,7 +36,8 @@ void Projectile::update(const struct GameContext& ctx) {
 			return;
 		}
 
-		velocity.x += 50.0f * ctx.delta; // Move to right for testing
+		if (!reverseProjectile) velocity.x = 100.0f; // Move to right for testing
+		else if (reverseProjectile) velocity.x = -100.0f; // Move to left for testing
 
 		// apply velocity to position
 		pos.x += velocity.x * ctx.delta;

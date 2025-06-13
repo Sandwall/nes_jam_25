@@ -40,8 +40,12 @@ void Enemy::update(const GameContext& ctx) {
 
 	if (fireTimer >= FIRE_COOLDOWN) {
 		for (int i = 0; i < NUM_PROJECTILES; i++) {
-			if (!projectiles[i].active) {
-				projectiles[i].spawn(pos.x, pos.y);
+			if (!projectiles[i].active) 
+			{
+				/* Check if enemy is currently moving left or right and update the booleans based on it for reversing
+				the projectiles velocity */
+				if (velocity.x == enemySpeedX) projectiles[i].spawn(pos.x, pos.y, false);
+				else if (velocity.x == -enemySpeedX) projectiles[i].spawn(pos.x, pos.y, true);
 				break;
 			}
 		}
