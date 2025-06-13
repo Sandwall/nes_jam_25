@@ -32,13 +32,15 @@ void Enemy::spawn(float x, float y) {
 
 void Enemy::update(const GameContext& ctx) {
 	movementTimer += ctx.delta;
-	fireTimer += ctx.delta;
 	
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].update(ctx);
 	}
 
-	if (fireTimer >= FIRE_COOLDOWN) {
+	if (spottedPlayer) fireTimer += ctx.delta;
+	else { if (fireTimer != 0.0f) fireTimer = 0.0f; }
+
+	if (fireTimer >= FIRE_COOLDOWN && spottedPlayer) {
 		for (int i = 0; i < NUM_PROJECTILES; i++) {
 			if (!projectiles[i].active) 
 			{
@@ -76,4 +78,27 @@ void Enemy::render(Gfx& gfx) {
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].render(gfx);
 	}
+}
+
+void Enemy::shoot_at_player(Player& player_)
+{
+	if (player_.pos.x >= pos.x && player_.pos.x <= pos.x + playerDistanceX && velocity.x == enemySpeedX &&
+		player_.pos.y >= pos.y && player_.pos.y <= pos.y + playerDistanceY || // Enemy moving forward and below player
+		player_.pos.x >= pos.x && player_.pos.x <= pos.x + playerDistanceX && velocity.x == enemySpeedX &&
+		player_.pos.y <= pos.y && player_.pos.y >= pos.y - playerDistanceY || // Enemy moving forward and above player
+		player_.pos.x <= pos.x && player_.pos.x >= pos.x - playerDistanceX && velocity.x == -enemySpeedX &&
+		player_.pos.y <= pos.y && player_.pos.y >= pos.y - playerDistanceY || // Enemy moving backward and above
+		player_.pos.x <= pos.x && player_.pos.x >= pos.x - playerDistanceX && velocity.x == -enemySpeedX &&
+		player_.pos.y >= pos.y && player_.pos.y <= pos.y + playerDistanceY) // Enemy moving backward and below player
+	{
+		spottedPlayer = true;
+	}
+
+	else
+	{
+		spottedPlayer = false;
+	}
+
+	//printf("Player position x: %f, enemy position x: %f\n", player_.pos.x, pos.x);
+	//printf("Player position y: %f, enemy position y: %f\n", player_.pos.y, pos.y);
 }

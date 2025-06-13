@@ -167,6 +167,9 @@ int main_loop() {
 			player.update(game);
 			for (int i = 0; i < enemies.size(); i++) enemies[i].update(game); // Update all enemies
 
+			// Update enemies to shoot at player once the player is in their range of view
+			for (int i = 0; i < enemies.size(); i++) enemies[i].shoot_at_player(player);
+
 			update_camera();
 		}
 
