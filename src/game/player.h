@@ -1,20 +1,17 @@
 #pragma once
 
 #include "entity.h"
-#include <tinydef.hpp>
 
 struct Player : Entity {
-	enum State {
-		Idle,
-		Walk,
-		Air,
-		Death,
-		Max
-	};
 
-	tds::StateMachine<Max> state;
 	bool isGrounded = false;
 	bool facingLeft = false;    // sprite faces right, so facingLeft = flipH
+
+	// timer that tracks how long the player was in the air
+	float coyoteTimer;
+
+	// timer that queues A-button presses, so that player can press it right before they hit the ground
+	float jumpBuffer;
 
 	void move_with_collision(const struct GameContext& ctx);
 

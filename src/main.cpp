@@ -7,8 +7,7 @@
 #include "engine/gfx.h"
 #include "engine/game_context.h"
 #include "engine/image_asset.h"
-#include "engine/nsf.h"
-#include "engine/nes_apu.h"
+#include "engine/audio.h"
 
 #include "game/player.h"
 #include "game/enemy.h"
@@ -18,13 +17,13 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-
 #include <tinydef.hpp>
 #include <mems.hpp>
 #include <vector>
+#include <string>
 
 constexpr int defWidth = Gfx::nesWidth * 4, defHeight = Gfx::nesHeight * 4;
-
+int windowWidth = defWidth, windowHeight = defHeight;    // these are here if we ever want it for some reason
 
 Input input;
 Gfx gfx;
@@ -69,8 +68,8 @@ int init() {
 	GameContext::init();
 
 	// create window and init graphics
-	game.window = SDL_CreateWindow("NES Game!", defWidth, defHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-	SDL_SetWindowMinimumSize(game.window, Gfx::nesWidth * 2, Gfx::nesHeight * 2);
+	game.window = SDL_CreateWindow("NES Game!", windowWidth, windowHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+	SDL_SetWindowMinimumSize(game.window, Gfx::nesWidth, Gfx::nesHeight);
 	if (!gfx.init(game.window))
 		return -1;
 
@@ -107,10 +106,14 @@ int init() {
 	//enemies[1].velocity = { 5.0f, 0.0f };
 	//enemies[2].velocity = { 5.0f, 0.0f };
 
+	audio_init();
+
 	SDL_ShowWindow(game.window);
+	return 0;
 }
 
 void cleanup() {
+	audio_close();
 	gfx.cleanup();
 	atlas.destroy();
 	SDL_DestroyWindow(game.window);
@@ -128,8 +131,11 @@ int main_loop() {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
-			case SDL_EVENT_WINDOW_MOVED:
 			case SDL_EVENT_WINDOW_RESIZED:
+				windowWidth = event.window.data1;
+				windowHeight = event.window.data2;
+			case SDL_EVENT_WINDOW_MOVED:
+				game.delta = game.target_sec();
 				startFrame = SDL_GetTicksNS();
 				break;
 
@@ -171,6 +177,7 @@ int main_loop() {
 		}
 
 		input.end_frame();
+		audio_tick();
 
 		//
 		// render
@@ -181,6 +188,12 @@ int main_loop() {
 		player.render(gfx);
 
 		for (int i = 0; i < enemies.size(); i++) enemies[i].render(gfx); // Render all enemies using gfx
+
+		if (paused) {
+			constexpr int PAUSED_TEXT_X = (Gfx::nesWidth / 2) - (static_cast<int>(std::char_traits<char>::length("PAUSED") * 8) / 2);
+			constexpr int PAUSED_TEXT_Y = (Gfx::nesHeight / 2) - 16;
+			gfx.queue_text(PAUSED_TEXT_X, PAUSED_TEXT_Y, "PAUSED");
+		}
 
 		gfx.finish_frame();
 
@@ -199,8 +212,8 @@ int main_loop() {
 
 constexpr float CAM_SPEED = 7.5f;
 void update_camera() {
-	int targetX = player.pos.x - (Gfx::nesWidth / 2);
-	int targetY = player.pos.y - (Gfx::nesHeight / 2);
+	int targetX = static_cast<int>(player.pos.x) - (Gfx::nesWidth / 2);
+	int targetY = static_cast<int>(player.pos.y) - (Gfx::nesHeight / 2);
 
 	// find room that player overlaps with the most
 	const SDL_FRect playerRect = player.get_cboxf();
@@ -226,8 +239,8 @@ void update_camera() {
 		targetY = tim::clamp(targetY, playerRoom->pxWorldY, playerRoom->pxHeight - Gfx::nesHeight);
 	}
 
-	gfx.cameraPos.x = tim::filerp32(gfx.cameraPos.x, targetX, CAM_SPEED, game.delta);
-	gfx.cameraPos.y = tim::filerp32(gfx.cameraPos.y, targetY, CAM_SPEED, game.delta);
+	gfx.cameraPos.x = tim::filerp32(gfx.cameraPos.x, static_cast<float>(targetX), CAM_SPEED, game.delta);
+	gfx.cameraPos.y = tim::filerp32(gfx.cameraPos.y, static_cast<float>(targetY), CAM_SPEED, game.delta);
 }
 
 void update_process_rooms() {
@@ -246,7 +259,7 @@ void update_process_rooms() {
 			game.playerRooms[game.nPlayerRooms++] = &level;
 		}
 
-		if (SDL_HasRectIntersectionFloat(&camBbox, &levelBbox) < game.nProcessRooms < GameContext::NUM_PROCESS_ROOMS) {
+		if (SDL_HasRectIntersectionFloat(&camBbox, &levelBbox) && game.nProcessRooms < GameContext::NUM_PROCESS_ROOMS) {
 			game.processRooms[game.nProcessRooms++] = &level;
 		}
 	}

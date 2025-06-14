@@ -28,14 +28,9 @@ bool InputAction::released() const {
 Input::Input() {}
 
 void Input::end_frame() {
-	up.end_frame();
-	down.end_frame();
-	left.end_frame();
-	right.end_frame();
-	a.end_frame();
-	b.end_frame();
-	select.end_frame();
-	start.end_frame();
+	for (int i = 0; i < InputAction::MAX; i++) {
+		actions[i].end_frame();
+	}
 }
 
 // TODO(sand): instead of iterating 8 times (InputAction::MAX) for each event we get, we could maintain a buffer of

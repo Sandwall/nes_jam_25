@@ -1,6 +1,11 @@
 #include "game_context.h"
 #include <simdjson.h>
 
+float GameContext::target_sec() const {
+	if (targetFps == 0) return 0.0f;
+	return 1.0f / static_cast<float>(targetFps);
+}
+
 uint64_t GameContext::target_ns() const {
 	if (targetFps == 0) return 0;
 	return 1000000000LL / targetFps;

@@ -2,6 +2,7 @@
 
 recent_file: path: "src/engine/image_asset.cpp"
 recent_file: path: "src/main.cpp"
+recent_file: path: "src/game/world.cpp"
 recent_file: path: "include/simdjson.h"
 recent_file: path: "src/game/player.cpp"
 recent_file: path: "src/engine/game_context.h"
@@ -12,6 +13,11 @@ target:
   executable: "bin/x64-Debug/nes_game.exe"
   enabled: 1
   working_directory: ""
+}
+breakpoint:
+{
+  source_location: "src/main.cpp:58:1"
+  hit_count: 1
 }
 breakpoint:
 {

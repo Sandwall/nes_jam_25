@@ -3,8 +3,7 @@
 #include <stdint.h>
 
 namespace nes {
-	class NSF {
-	public:
+	struct NSF {
 		NSF() = default;
 		~NSF();
 

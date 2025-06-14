@@ -90,7 +90,7 @@ namespace nes {
 		bufPtr += 3;
 
 		if (programLength == 0) {
-			programLength = fileSize - 0x80;
+			programLength = static_cast<uint32_t>(fileSize) - 0x80;
 			programData = new uint8_t[programLength];
 			memcpy(programData, buffer + 0x80, programLength);
 		}

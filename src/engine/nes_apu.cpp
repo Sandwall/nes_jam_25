@@ -1,6 +1,85 @@
 #include "nes_apu.h"
+#include "nsf.h"
+
+#include <string.h>
+#include <stdlib.h>
+
+#include <tinydef.hpp>
 
 namespace nes {
+	bool APU::load_song(const NSF& nsf) {
+		if (!nsf.mValid) return false;
+
+		//Write $00 to all RAM at $0000-$07FF and $6000-$7FFF.
+		memset(memory, 0, 0x07FF);
+		memset(memory + 0x6000, 0, 0x1FFF);
+
+		//Initialize the sound registers by writing $00 to $4000-$4013, and $00 then $0F to $4015.
+		memset(memory + 0x4000, 0, 0x13);
+		memory[0x4015] = 0x0F;
+
+		//Initialize the frame counter to 4-step mode ($40 to $4017).
+		memory[0x4017] = 0x40;
+
+		//If the tune is bank switched, load the bank values from $070-$077 into $5FF8-$5FFF.
+		bool bankSwitched = false;
+		for (int i = 0; i < 8; i++) {
+			if (0 != nsf.bankswitchInitVal[i])
+				bankSwitched = true;
+
+			memory[0x5FF8 + i] = nsf.bankswitchInitVal[i];
+		}
+
+		if (bankSwitched) {
+			uint16_t padding = nsf.loadAddress & 0xFFF;
+			// write code for bank switching...
+		} else {
+			uint16_t clampedSize = tim::min<uint16_t>(0xFFFF - 0x8000, nsf.programLength);
+			
+			// trying to avoid out of bounds memory access, maybe NSF is invalid?
+			if (nsf.loadAddress + clampedSize >= TOTAL_MEMORY)
+				return false;
+
+			memcpy(memory + nsf.loadAddress, nsf.programData, clampedSize);
+		}
+
+		//Set the A register for the desired song.
+		aReg = nsf.startingSong;
+
+		//Set the X register for PAL or NTSC.
+		xReg = nsf.palNtscBits;
+		
+		//Call the music INIT routine.
+		jump_subroutine(nsf.initAddress);
+
+		return true;
+	}
+
+	void APU::start_song(const NSF& nsf) {
+
+	}
+
+	void APU::jump_subroutine(uint16_t address) {
+
+	}
+
+	// TODO(sand): figure this out
+	APU::Instruction APU::_fetch() {
+		Instruction inst;
+		inst.opcode = memory[programCtr++];
+		inst.length++;
+
+
+		return inst;
+	}
+
+	void APU::step() {
+		Instruction inst = _fetch();
+
+
+	}
+
+
 	/* type = duty cycle type
 	 * duty = duty cycle index
 	 *

@@ -14,6 +14,7 @@ struct GameContext {
 	// bool loading;
 
 	uint64_t targetFps;
+	float target_sec() const;
 	uint64_t target_ns() const;
 
 	// engine details

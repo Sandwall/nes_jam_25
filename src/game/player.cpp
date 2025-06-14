@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include <tinydef.hpp>
+
 void Player::load(const TextureAtlas& atlas) {
 	animator.init(atlas.find_sprite("player"));
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
@@ -176,6 +178,7 @@ void Player::move_with_collision(const GameContext& ctx) {
 		float maxOverlap = 0; bool collisionDetected = false;
 		for (int y = top; y <= bottom; y++) {
 			for (int x = left; x <= right; x++) {
+				// small error 
 				if (1 == cLayer.intGridData[(y * cLayer.widthCells) + x]) {
 					tileRect.x = static_cast<float>(x * cLayer.cellSize);
 					tileRect.y = static_cast<float>(y * cLayer.cellSize);

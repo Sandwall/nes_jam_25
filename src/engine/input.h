@@ -4,8 +4,7 @@
 
 struct InputAction {
 	enum Type {
-		NONE = 0,
-		UP,
+		UP = 0,
 		DOWN,
 		LEFT,
 		RIGHT,
@@ -29,8 +28,6 @@ struct InputAction {
 	bool released() const;
 };
 
-/* Input - Holds all of the input data for the game
- */
 struct Input {
 	Input();
 
@@ -56,8 +53,8 @@ struct Input {
 		SDL_SCANCODE_RIGHT,		// right
 		SDL_SCANCODE_Z,			// a
 		SDL_SCANCODE_X,			// b
+		SDL_SCANCODE_RSHIFT,	// select
 		SDL_SCANCODE_RETURN,	// start
-		SDL_SCANCODE_RSHIFT		// select
 	};
 
 	void end_frame();
