@@ -16,8 +16,16 @@ void Player::load(const TextureAtlas& atlas) {
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
-	pos = { 64.0f, 64.0f };
+	pos = { 64.0f, 130.0f };
 	velocity = { 0.0f, 0.0f };
+
+	for (int i = 0; i < NUM_ATTACKS; i++) {
+		projectiles[i].load(atlas);
+		projectiles[i].active = false;
+	}
+
+	fireTimer = FIRE_COOLDOWN;
+	health = maxHealth;
 
 	if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
@@ -34,27 +42,50 @@ void Player::update(const GameContext& ctx) {
 	constexpr float gravity = hSpeed * 4.0f;
 	constexpr float jumpSpeed = hSpeed * 1.75f;
 
-	if (ctx.input->right) {
+	fireTimer += ctx.delta;
+
+	if (ctx.input->right && health > 0) {
 		facingLeft = false;
 		velocity.x = hSpeed;
-	} else if (ctx.input->left) {
+	} else if (ctx.input->left && health > 0) {
 		facingLeft = true;
 		velocity.x = -hSpeed;
 	} else velocity.x = 0.0f;
 
+	if (ctx.input->select && health > 0)
+	{
+		if (fireTimer >= FIRE_COOLDOWN) {
+			for (int i = 0; i < NUM_ATTACKS; i++) {
+				if (!projectiles[i].active) {
+					// Check if player is facing a certain direction to make sure projectiles update at current velocities
+					if (!facingLeft) projectiles[i].spawn(pos.x, pos.y - 15.0f, false);
+					else if (facingLeft) projectiles[i].spawn(pos.x, pos.y - 15.0f, true);
+					break;
+				}
+			}
+
+			fireTimer = 0.0f;
+		}
+	}
+	
+	// update projectiles
+	for (int i = 0; i < NUM_ATTACKS; i++) {
+		projectiles[i].update(ctx);
+	}
+
 	// apply gravity
 	velocity.y += gravity * ctx.delta;
 
-	if (isGrounded && ctx.input->a.clicked())
+	if (isGrounded && ctx.input->a.clicked() && health > 0)
 		velocity.y = -jumpSpeed;
 
-	if (!isGrounded && velocity.y < 0.0f && !ctx.input->a) {
+	if (!isGrounded && velocity.y < 0.0f && !ctx.input->a && health > 0) {
 		velocity.y /= 4.0f;
 	}
 
 	move_with_collision(ctx);
 
-	animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
+	if (health > 0) animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
 }
 
 constexpr SDL_FColor FCOL_WHITE = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -62,6 +93,10 @@ constexpr SDL_FColor FCOL_WHITE = { 1.0f, 1.0f, 1.0f, 1.0f };
 void Player::render(Gfx& gfx) {
 	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y),
 		animator.spriteIdx, animator.current_frame(*sheet), true, FCOL_WHITE, facingLeft);
+
+	for (int i = 0; i < NUM_ATTACKS; i++) {
+		projectiles[i].render(gfx);
+	}
 	
 	// const SDL_FRect cbox = get_cboxf();
 	// if (isGrounded) gfx.queue_rect(cbox, true, SDL_FColor{ 0.0f, 0.0f, 1.0f, 1.0f });

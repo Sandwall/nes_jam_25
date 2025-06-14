@@ -37,6 +37,20 @@ void Enemy::update(const GameContext& ctx) {
 	// update projectiles
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].update(ctx);
+
+		if (projectiles[i].active)
+		{
+			SDL_FRect projectile = projectiles[i].get_cboxf();
+			SDL_FRect player = ctx.player->get_cboxf();
+
+			// Check if enemy's projectile hit the player
+			if (SDL_HasRectIntersectionFloat(&projectile, &player))
+			{
+				ctx.player->health -= 1;
+				projectiles[i].active = false;
+				//printf("Player health: %i\n", ctx.player->health);
+			}
+		}
 	}
 
 	// check if player is within the enemy's detection range
