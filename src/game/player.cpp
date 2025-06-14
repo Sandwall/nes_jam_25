@@ -17,6 +17,8 @@ void Player::load(const TextureAtlas& atlas) {
 	pos = { 64.0f, 64.0f };
 	velocity = { 0.0f, 0.0f };
 
+	health = 100;
+
 	if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
 		origin = { collBoxSize.x / 2.0f, collBoxSize.y };
@@ -39,6 +41,8 @@ void Player::update(const GameContext& ctx) {
 		facingLeft = true;
 		velocity.x = -hSpeed;
 	} else velocity.x = 0.0f;
+
+	if (health <= 0) active = false;
 
 	// apply gravity
 	velocity.y += gravity * ctx.delta;

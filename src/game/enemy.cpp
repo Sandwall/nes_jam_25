@@ -15,6 +15,7 @@ void Enemy::load(const TextureAtlas& atlas) {
 	assert(sheet);
 
 	origin = { 18.0f, 18.0f };
+	health = 20;
 
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].load(atlas);

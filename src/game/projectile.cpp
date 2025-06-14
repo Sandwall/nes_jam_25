@@ -4,6 +4,7 @@
 #include "engine/image_asset.h"
 #include "engine/gfx.h"
 #include "engine/input.h"
+#include "game/player.h"
 
 #include "game/world.h"
 
@@ -34,6 +35,16 @@ void Projectile::update(const struct GameContext& ctx) {
 		if (lifeTimer >= LIFETIME) {
 			active = false;
 			return;
+		}
+
+		SDL_FRect playerRect = ctx.player->get_cboxf();
+		SDL_FRect projectileRect = get_cboxf();
+
+		if (SDL_HasRectIntersectionFloat(&playerRect, &projectileRect))
+		{
+			ctx.player->health -= 1;
+			active = false;
+			//printf("HERE\n");
 		}
 
 		if (!reverseProjectile) velocity.x = 100.0f; // Move to right for testing

@@ -17,6 +17,8 @@ struct Enemy : public Entity {
 	void update(const struct GameContext& ctx) override;
 	void render(struct Gfx& gfx) override;
 
+	int health;
+
 private:
 	Projectile projectiles[NUM_PROJECTILES];
 

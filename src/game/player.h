@@ -21,4 +21,6 @@ struct Player : Entity {
 	void load(const struct TextureAtlas& atlas) override;
 	void update(const struct GameContext& ctx) override;
 	void render(struct Gfx& gfx) override;
+
+	int health;
 };
