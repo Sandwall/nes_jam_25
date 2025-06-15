@@ -54,7 +54,7 @@ void update_process_rooms();
 void update_camera();
 
 void game_update() {
-	game.nEnemies = enemies.size();
+	game.nEnemies = static_cast<int>(enemies.size());
 	game.enemies = enemies.data();
 
 	update_process_rooms();

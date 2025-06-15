@@ -114,13 +114,11 @@ int main(int argc, char** argv) {
 		//
 		gfx.begin_frame();
 
-		world.render(gfx, game);
-		player.render(gfx);
+		game_render();
 
-		// Render the score text
-		gfx.queue_text(5, 5, std::to_string(game.points).c_str());
-
-		for (int i = 0; i < enemies.size(); i++) enemies[i].render(gfx); // Render all enemies using gfx
+		static char pointStr[32];
+		snprintf(pointStr, 32, "PTS %d", game.points);
+		gfx.queue_text(5, 5, pointStr);
 
 		if (paused) {
 			constexpr int PAUSED_TEXT_X = (Gfx::nesWidth / 2) - (static_cast<int>(std::char_traits<char>::length("PAUSED") * 8) / 2);

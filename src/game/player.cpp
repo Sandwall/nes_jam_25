@@ -71,34 +71,26 @@ void Player::update(GameContext& ctx) {
 	}
 	
 	// update projectiles
-	for (int i = 0; i < NUM_ATTACKS; i++)
+	for (int i = 0; i < NUM_ATTACKS; i++) {
 		projectiles[i].update(ctx);
 
-		if (projectiles[i].active)
-		{
-			SDL_FRect enemy = ctx.enemies->get_cboxf();
+		if (projectiles[i].active) {
 			SDL_FRect projectile = projectiles[i].get_cboxf();
+			for (int j = 0; j < ctx.nEnemies; j++) {
+				if (!ctx.enemies[j].active) continue;
 
-			if (SDL_HasRectIntersectionFloat(&projectile, &enemy))
-			{
-				//printf("HERE\n");
+				SDL_FRect enemy = ctx.enemies[j].get_cboxf();
 
-				if (ctx.enemies->active && ctx.enemies->health > 1)
-				{
-					ctx.enemies->health -= 1;
+				if (SDL_HasRectIntersectionFloat(&projectile, &enemy)) {
+					ctx.enemies[j].health -= 1;
 					ctx.points += 100;
-				}
 
-				else if (ctx.enemies->active && ctx.enemies->health <= 1) ctx.enemies->health -= 1;
-				projectiles[i].active = false;
+					projectiles[i].active = false;
+				}
 			}
+
 		}
 	}
-
-	if (ctx.enemies->health <= 0 && ctx.enemies->active) ctx.points += 500;
-
-	char buffer[32];
-	snprintf(buffer, ctx.points, "Points: %i\n");
 
 	// apply gravity
 	velocity.y += gravity * ctx.delta;

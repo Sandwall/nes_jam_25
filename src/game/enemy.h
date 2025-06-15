@@ -28,7 +28,7 @@ private:
 	static constexpr float DETECTION_DISTANCE = 64.0f;
 	bool detectedPlayer;
 
-	static constexpr int MAX_HEALTH = 5.0f;
+	static constexpr int MAX_HEALTH = 5;
 };
 
 #endif
