@@ -66,6 +66,8 @@ int main(int argc, char** argv) {
 	//
 	// MAIN LOOP
 	//
+	float mainMenuTimer{};
+
 	while (true) {
 		// timer start - this is meant for framelimiting
 		Uint64 startFrame = SDL_GetTicksNS();
@@ -112,11 +114,24 @@ int main(int argc, char** argv) {
 
 			gfx.begin_frame();
 
+			mainMenuTimer += game.delta;
+
 			// Render game title text
 			gfx.queue_text(Gfx::nesWidth / 2.8, Gfx::nesHeight / 8, "NES Game!");
 
-			// Render press start text
-			gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!");
+			if (mainMenuTimer <= 0.5f)
+			{
+				// Render press start text
+				gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!", SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f));
+			}
+
+			else if (mainMenuTimer > 0.5f)
+			{
+				// Render press start text
+				gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!", SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f));
+
+				if (mainMenuTimer > 0.8f) mainMenuTimer = 0.0f; // Reset main menu timer to 0
+			}
 
 			gfx.finish_frame();
 		}
