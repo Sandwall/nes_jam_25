@@ -85,9 +85,9 @@ void Enemy::update(GameContext& ctx) {
 		if (fireTimer >= FIRE_COOLDOWN) {
 			for (int i = 0; i < NUM_PROJECTILES; i++) {
 				if (!projectiles[i].active) {
-					if (velocity.x >= 0.0f)
+					if (velocity.x >= 0.0f && ctx.player->pos.x >= pos.x)
 						projectiles[i].spawn(pos.x, pos.y, 100.0f, 0.0f);
-					else if (velocity.x < 0.0f)
+					else if (velocity.x < 0.0f && ctx.player->pos.x < pos.x)
 						projectiles[i].spawn(pos.x, pos.y, -100.0f, 0.0f);
 
 					break;
