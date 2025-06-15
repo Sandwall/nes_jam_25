@@ -42,6 +42,8 @@ void Enemy::spawn(float x, float y) {
 }
 
 void Enemy::update(GameContext& ctx) {
+	if (!active) return;
+
 	movementTimer += ctx.delta;
 
 	// update projectiles
@@ -114,6 +116,8 @@ void Enemy::update(GameContext& ctx) {
 }
 
 void Enemy::render(Gfx& gfx) {
+	if (!active) return;
+
 	SDL_FColor enemyColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 	
 	if (detectedPlayer) {
