@@ -29,6 +29,7 @@ Player player;
 std::vector<Enemy> enemies;
 
 bool paused = false;
+bool inMainMenu = true;
 
 GameContext game = {
 	.delta = 1.0f / 60.0f,
@@ -98,35 +99,61 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		if (input.start.clicked())
-			paused = !paused;
+		// Check if the player is in main menu
+		if (inMainMenu)
+		{
+			if (input.start.clicked())
+			{
+				input.start.down = false; // Prevents pausing the game immediately
+				input.start.prevDown = true; // Set start to its previous key/button press
 
-		//
-		// update
-		//
-		if (!paused) game_update();
+				inMainMenu = false; // Switch to game state and out of main menu
+			}
 
-		input.end_frame();
-		audio_tick();
+			gfx.begin_frame();
 
-		//
-		// render
-		//
-		gfx.begin_frame();
+			// Render game title text
+			gfx.queue_text(Gfx::nesWidth / 2.8, Gfx::nesHeight / 8, "NES Game!");
 
-		game_render();
+			// Render press start text
+			gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!");
 
-		static char pointStr[32];
-		snprintf(pointStr, 32, "PTS %d", game.points);
-		gfx.queue_text(5, 5, pointStr);
-
-		if (paused) {
-			constexpr int PAUSED_TEXT_X = (Gfx::nesWidth / 2) - (static_cast<int>(std::char_traits<char>::length("PAUSED") * 8) / 2);
-			constexpr int PAUSED_TEXT_Y = (Gfx::nesHeight / 2) - 16;
-			gfx.queue_text(PAUSED_TEXT_X, PAUSED_TEXT_Y, "PAUSED");
+			gfx.finish_frame();
 		}
 
-		gfx.finish_frame();
+		// Otherwise, check if the player is playing the game
+		else
+		{
+			if (input.start.clicked())
+				paused = !paused;
+
+			//
+			// update
+			//
+			if (!paused) game_update();
+
+			input.end_frame();
+			audio_tick();
+
+			//
+			// render
+			//
+			gfx.begin_frame();
+
+			game_render();
+
+			static char pointStr[32];
+			snprintf(pointStr, 32, "PTS %d", game.points);
+			gfx.queue_text(5, 5, pointStr);
+
+			if (paused) {
+				constexpr int PAUSED_TEXT_X = (Gfx::nesWidth / 2) - (static_cast<int>(std::char_traits<char>::length("PAUSED") * 8) / 2);
+				constexpr int PAUSED_TEXT_Y = (Gfx::nesHeight / 2) - 16;
+				gfx.queue_text(PAUSED_TEXT_X, PAUSED_TEXT_Y, "PAUSED");
+			}
+
+			gfx.finish_frame();
+		}
 
 		// end frame - framelimiting logic
 		Uint64 elapsed = SDL_GetTicksNS() - startFrame;
