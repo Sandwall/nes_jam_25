@@ -83,15 +83,11 @@ uint32_t TextureAtlas::add_to_atlas(const char* key, const char* imagePath, cons
 			&requestedChannels, NUM_CHANNELS)
 		);
 
-	if (key)
-		strncpy(subTex.key, key, SubTexture::KEY_LENGTH);
-	else
-		snprintf(subTex.key, SubTexture::KEY_LENGTH, "sprite%d", nSubtextures);
+	if (key) strncpy(subTex.key, key, SubTexture::KEY_LENGTH);
+	else snprintf(subTex.key, SubTexture::KEY_LENGTH, "sprite%d", nSubtextures);
 
-	if (jsonPath)
-		subTex.sheetData = SpriteSheet::load(jsonPath, arena);
-	else
-		subTex.sheetData = nullptr;
+	if (jsonPath) subTex.sheetData = SpriteSheet::load(jsonPath, arena);
+	else subTex.sheetData = nullptr;
 
 	subTextures[nSubtextures] = subTex;
 
@@ -273,26 +269,36 @@ void SpriteAnimator::start(int anim, const SpriteSheet& sheet) {
 	currentFrame = cAnimMeta.startFrame;
 }
 
-void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
+bool SpriteAnimator::anim_just_started() const {
+	return prevAnimIdx != animIdx;
+}
+
+// returns true when animation must reset
+// for pingpong this is both a reset from the forwards direction to the backwards direction and vice versa
+bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 	const AnimationMeta& cAnimMeta = sheet.anims[animIdx];
 	const AnimationFrame& cAnimFrame = sheet.frames[currentFrame];
 
+	bool animationHasReset = false;
+	const bool justStarted = anim_just_started();
 	timer += delta;
 	if (timer >= cAnimFrame.duration) {
 		timer = fmodf(timer, cAnimFrame.duration);
 		switch (cAnimMeta.type) {
 		case AnimationMeta::FORWARD: {
 			currentFrame++;
-			if (currentFrame > cAnimMeta.endFrame)
+			if (currentFrame > cAnimMeta.endFrame) {
 				currentFrame = cAnimMeta.startFrame;
-			else if (currentFrame < cAnimMeta.startFrame)
+				animationHasReset = !justStarted;
+			} else if (currentFrame < cAnimMeta.startFrame)
 				currentFrame = cAnimMeta.startFrame;
 		} break;
 		case AnimationMeta::BACKWARD: {
 			currentFrame--;
-			if (currentFrame < cAnimMeta.startFrame)
+			if (currentFrame < cAnimMeta.startFrame) {
 				currentFrame = cAnimMeta.endFrame;
-			else if (currentFrame > cAnimMeta.endFrame)
+				animationHasReset = !justStarted;
+			} else if (currentFrame > cAnimMeta.endFrame)
 				currentFrame = cAnimMeta.endFrame;
 		} break;
 		case AnimationMeta::PINGPONG: {
@@ -300,6 +306,7 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 				currentFrame++;
 				if (currentFrame > cAnimMeta.endFrame) {
 					currentFrame = cAnimMeta.endFrame;
+					animationHasReset = !justStarted;
 					pingpongForward = false;
 				} else if (currentFrame < cAnimMeta.startFrame)
 					currentFrame = cAnimMeta.startFrame;
@@ -307,6 +314,7 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 				currentFrame--;
 				if (currentFrame < cAnimMeta.startFrame) {
 					currentFrame = cAnimMeta.startFrame;
+					animationHasReset = !justStarted;
 					pingpongForward = true;
 				} else if (currentFrame > cAnimMeta.endFrame)
 					currentFrame = cAnimMeta.endFrame;
@@ -314,6 +322,10 @@ void SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 		} break;
 		}
 	}
+
+	prevAnimIdx = animIdx;
+
+	return animationHasReset;
 }
 
 SDL_FRect SpriteAnimator::current_framef(const SpriteSheet& sheet) const {

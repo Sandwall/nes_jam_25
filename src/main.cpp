@@ -134,6 +134,7 @@ int main_loop() {
 			case SDL_EVENT_WINDOW_RESIZED:
 				windowWidth = event.window.data1;
 				windowHeight = event.window.data2;
+				[[fallthrough]];
 			case SDL_EVENT_WINDOW_MOVED:
 				game.delta = game.target_sec();
 				startFrame = SDL_GetTicksNS();
@@ -154,11 +155,6 @@ int main_loop() {
 				break;
 			}
 		}
-
-		if (input.b.clicked()) {
-			cleanup();
-			init();
-		}
 		
 		if (input.start.clicked())
 			paused = !paused;
@@ -167,6 +163,9 @@ int main_loop() {
 		// update
 		//
 		if (!paused) {
+			game.nEnemies = enemies.size();
+			game.enemies = enemies.data();
+
 			update_process_rooms();
 
 			// update entities

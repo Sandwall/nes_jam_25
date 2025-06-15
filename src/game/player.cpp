@@ -52,7 +52,7 @@ void Player::update(const GameContext& ctx) {
 		velocity.x = -hSpeed;
 	} else velocity.x = 0.0f;
 
-	if (ctx.input->select && health > 0)
+	if (ctx.input->b && health > 0)
 	{
 		if (fireTimer >= FIRE_COOLDOWN) {
 			for (int i = 0; i < NUM_ATTACKS; i++) {

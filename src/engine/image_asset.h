@@ -92,13 +92,16 @@ struct SpriteAnimator {
 	int animIdx;
 
 	// internal
+	int prevAnimIdx;
+	bool pingpongForward = true;
+	bool anim_just_started() const;
+
 	float timer;
-	int currentFrame : 31;
-	int pingpongForward : 1 = true;
+	int currentFrame;
 
 	void init(uint32_t sprite);
 	void start(int anim, const SpriteSheet& sheet);
-	void update(float delta, const SpriteSheet& sheet);
+	bool update(float delta, const SpriteSheet& sheet);
 	SDL_FRect current_framef(const SpriteSheet& sheet) const;
 	SDL_Rect current_frame(const SpriteSheet& sheet) const;
 };

@@ -6,6 +6,8 @@
 
 struct GameContext {
 	float delta;
+	uint32_t points;
+
 	// we can fit another 4-byte value here
 
 	// NOTE(sand): I thought it might be a good idea for the gameobject logic to check this value and update
@@ -24,8 +26,10 @@ struct GameContext {
 	struct TextureAtlas* atlas;
 
 	// game details (eventually we might have pointers to enemies/bosses here)
+	int nEnemies;
 	struct GameWorld* world;
 	struct Player* player;
+	struct Enemy* enemies;
 
 	// at the start of every frame, the game looks at which rooms the camera can see and which room the player
 	// is in and updates these with at max 4 of those rooms. It's fine to do this at the start of the frame
