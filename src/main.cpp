@@ -32,6 +32,7 @@ bool paused = false;
 
 GameContext game = {
 	.delta = 1.0f / 60.0f,
+	.points = 0,
 	.targetFps = 60,
 	.gfx = &gfx,
 	.input = &input,
@@ -113,7 +114,13 @@ int main(int argc, char** argv) {
 		//
 		gfx.begin_frame();
 
-		game_render();
+		world.render(gfx, game);
+		player.render(gfx);
+
+		// Render the score text
+		gfx.queue_text(5, 5, std::to_string(game.points).c_str());
+
+		for (int i = 0; i < enemies.size(); i++) enemies[i].render(gfx); // Render all enemies using gfx
 
 		if (paused) {
 			constexpr int PAUSED_TEXT_X = (Gfx::nesWidth / 2) - (static_cast<int>(std::char_traits<char>::length("PAUSED") * 8) / 2);

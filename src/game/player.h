@@ -39,4 +39,6 @@ private:
 
 	static constexpr float FIRE_COOLDOWN = 0.4f;
 	float fireTimer;
+
+	static constexpr int maxHealth = 5;
 };

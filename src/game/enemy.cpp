@@ -15,9 +15,19 @@ void Enemy::load(const TextureAtlas& atlas) {
 	assert(sheet);
 
 	origin = { 18.0f, 18.0f };
+	health = MAX_HEALTH;
 
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].load(atlas);
+	}
+
+	if (sheet->frames) {
+		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
+		origin = { collBoxSize.x / 2.0f, collBoxSize.y / 2.0f };
+		collBoxSize.y *= 3.0f / 4.0f;
+	}
+	else {
+		collBoxSize = { 16.0f, 24.0f };
 	}
 }
 
@@ -33,6 +43,8 @@ void Enemy::spawn(float x, float y, float vx, float vy) {
 }
 
 void Enemy::update(GameContext& ctx) {
+	if (!active) return;
+
 	movementTimer += ctx.delta;
 
 	// update projectiles
@@ -51,6 +63,8 @@ void Enemy::update(GameContext& ctx) {
 			}
 		}
 	}
+
+	if (ctx.enemies->health <= 0 && ctx.enemies->active) ctx.enemies->active = false;
 
 	// check if player is within the enemy's detection range
 	float dx = ctx.player->pos.x - pos.x;
@@ -101,6 +115,8 @@ void Enemy::update(GameContext& ctx) {
 }
 
 void Enemy::render(Gfx& gfx) {
+	if (!active) return;
+
 	SDL_FColor enemyColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 	
 	if (detectedPlayer) {
