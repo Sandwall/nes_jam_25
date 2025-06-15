@@ -27,7 +27,7 @@ void Projectile::load(const struct TextureAtlas& atlas) {
 	active = false;
 }
 
-void Projectile::update(const struct GameContext& ctx) {
+void Projectile::update(struct GameContext& ctx) {
 	if (active) {
 		lifeTimer += ctx.delta;
 

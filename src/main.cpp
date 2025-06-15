@@ -35,6 +35,7 @@ std::vector<Enemy> enemies;
 
 GameContext game = {
 	.delta = 1.0f / 60.0f,
+	.points = 0,
 	.targetFps = 60,
 	.gfx = &gfx,
 	.input = &input,
@@ -185,6 +186,9 @@ int main_loop() {
 
 		world.render(gfx, game);
 		player.render(gfx);
+
+		// Render the score text
+		gfx.queue_text(5, 5, std::to_string(game.points).c_str());
 
 		for (int i = 0; i < enemies.size(); i++) enemies[i].render(gfx); // Render all enemies using gfx
 

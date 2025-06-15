@@ -14,8 +14,10 @@ struct Enemy : public Entity {
 	void spawn(float x, float y);
 
 	void load(const struct TextureAtlas& atlas) override;
-	void update(const struct GameContext& ctx) override;
+	void update(struct GameContext& ctx) override;
 	void render(struct Gfx& gfx) override;
+	
+	int health = MAX_HEALTH;
 
 private:
 	Projectile projectiles[NUM_PROJECTILES];
@@ -25,6 +27,8 @@ private:
 
 	static constexpr float DETECTION_DISTANCE = 64.0f;
 	bool detectedPlayer;
+
+	static constexpr int MAX_HEALTH = 5.0f;
 };
 
 #endif

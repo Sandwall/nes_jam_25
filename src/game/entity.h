@@ -18,7 +18,7 @@ struct Entity {
 	const SpriteSheet* sheet = nullptr; // loaded in by the atlas
 
 	virtual void load(const TextureAtlas& atlas) = 0;
-	virtual void update(const struct GameContext& ctx) = 0;
+	virtual void update(struct GameContext& ctx) = 0;
 	virtual void render(struct Gfx& gfx) = 0;
 
 	bool is_in_room(const struct LdtkLevel* level);

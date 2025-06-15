@@ -4,6 +4,7 @@
 #include "engine/image_asset.h"
 #include "engine/gfx.h"
 #include "engine/input.h"
+#include "game/enemy.h"
 
 #include "game/world.h"
 
@@ -25,7 +26,7 @@ void Player::load(const TextureAtlas& atlas) {
 	}
 
 	fireTimer = FIRE_COOLDOWN;
-	health = maxHealth;
+	health = MAX_HEALTH;
 
 	if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
@@ -37,7 +38,7 @@ void Player::load(const TextureAtlas& atlas) {
 	}
 }
 
-void Player::update(const GameContext& ctx) {
+void Player::update(GameContext& ctx) {
 	constexpr float hSpeed = 128.0f;
 	constexpr float gravity = hSpeed * 4.0f;
 	constexpr float jumpSpeed = hSpeed * 1.75f;
@@ -71,7 +72,32 @@ void Player::update(const GameContext& ctx) {
 	// update projectiles
 	for (int i = 0; i < NUM_ATTACKS; i++) {
 		projectiles[i].update(ctx);
+
+		if (projectiles[i].active)
+		{
+			SDL_FRect enemy = ctx.enemies->get_cboxf();
+			SDL_FRect projectile = projectiles[i].get_cboxf();
+
+			if (SDL_HasRectIntersectionFloat(&projectile, &enemy))
+			{
+				//printf("HERE\n");
+
+				if (ctx.enemies->active && ctx.enemies->health > 1)
+				{
+					ctx.enemies->health -= 1;
+					ctx.points += 100;
+				}
+
+				else if (ctx.enemies->active && ctx.enemies->health <= 1) ctx.enemies->health -= 1;
+				projectiles[i].active = false;
+			}
+		}
 	}
+
+	if (ctx.enemies->health <= 0 && ctx.enemies->active) ctx.points += 500;
+
+	char buffer[32];
+	snprintf(buffer, ctx.points, "Points: %i\n");
 
 	// apply gravity
 	velocity.y += gravity * ctx.delta;
