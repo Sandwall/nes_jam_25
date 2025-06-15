@@ -11,10 +11,10 @@ constexpr int NUM_PROJECTILES = 4;
 struct Enemy : public Entity {
 	float movementTimer;
 
-	void spawn(float x, float y);
+	void spawn(float x, float y, float vx, float vy);
 
 	void load(const struct TextureAtlas& atlas) override;
-	void update(const struct GameContext& ctx) override;
+	void update(struct GameContext& ctx) override;
 	void render(struct Gfx& gfx) override;
 
 private:

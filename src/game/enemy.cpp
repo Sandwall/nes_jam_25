@@ -21,8 +21,9 @@ void Enemy::load(const TextureAtlas& atlas) {
 	}
 }
 
-void Enemy::spawn(float x, float y) {
-	pos = SDL_FPoint(x, y);
+void Enemy::spawn(float x, float y, float vx, float vy) {
+	pos = { x, y };
+	velocity = { vx, vy };
 	active = true;
 	detectedPlayer = false;
 
@@ -31,21 +32,19 @@ void Enemy::spawn(float x, float y) {
 	}
 }
 
-void Enemy::update(const GameContext& ctx) {
+void Enemy::update(GameContext& ctx) {
 	movementTimer += ctx.delta;
 
 	// update projectiles
 	for (int i = 0; i < NUM_PROJECTILES; i++) {
 		projectiles[i].update(ctx);
 
-		if (projectiles[i].active)
-		{
+		if (projectiles[i].active) {
 			SDL_FRect projectile = projectiles[i].get_cboxf();
 			SDL_FRect player = ctx.player->get_cboxf();
 
 			// Check if enemy's projectile hit the player
-			if (SDL_HasRectIntersectionFloat(&projectile, &player))
-			{
+			if (SDL_HasRectIntersectionFloat(&projectile, &player)) {
 				ctx.player->health -= 1;
 				projectiles[i].active = false;
 				//printf("Player health: %i\n", ctx.player->health);
@@ -72,10 +71,11 @@ void Enemy::update(const GameContext& ctx) {
 		if (fireTimer >= FIRE_COOLDOWN) {
 			for (int i = 0; i < NUM_PROJECTILES; i++) {
 				if (!projectiles[i].active) {
-					/* Check if enemy is currently moving left or right and update the booleans based on it for reversing
-					the projectiles velocity */
-					if (velocity.x >= 0.0f) projectiles[i].spawn(pos.x, pos.y, false);
-					else if (velocity.x < 0.0f) projectiles[i].spawn(pos.x, pos.y, true);
+					if (velocity.x >= 0.0f)
+						projectiles[i].spawn(pos.x, pos.y, 100.0f, 0.0f);
+					else if (velocity.x < 0.0f)
+						projectiles[i].spawn(pos.x, pos.y, -100.0f, 0.0f);
+
 					break;
 				}
 			}
@@ -84,14 +84,13 @@ void Enemy::update(const GameContext& ctx) {
 		}
 	}
 
-	// Change the velocity of the enemy after certain time for testing
-	if (movementTimer >= 0.0f && movementTimer <= 2.0f) {
+	if (movementTimer <= 2.0f) {
 		// Set the enemy's velocity to forward current velocity
 		if (velocity.x != enemySpeedX) velocity.x = enemySpeedX;
-	} else if (movementTimer > 2.0f && movementTimer <= 4.0f) {
+	} else if (movementTimer <= 4.0f) {
 		// Set the enemy's velocity to reverse current velocity
 		if (velocity.x != -enemySpeedX) velocity.x = -enemySpeedX;
-	} else if (movementTimer > 4.0f)
+	} else
 		movementTimer = 0.0f;
 
 	// apply velocity to position

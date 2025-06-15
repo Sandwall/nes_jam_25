@@ -90,6 +90,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\game\projectile.cpp" />
     <ClCompile Include="src\engine\audio.cpp" />
     <ClCompile Include="src\engine\nes_apu.cpp" />
@@ -107,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\audio.h" />
+    <ClInclude Include="src\game.h" />
     <ClInclude Include="src\game\enemy.h" />
     <ClInclude Include="src\engine\game_context.h" />
     <ClInclude Include="src\engine\gfx.h" />

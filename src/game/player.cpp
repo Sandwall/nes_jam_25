@@ -25,7 +25,7 @@ void Player::load(const TextureAtlas& atlas) {
 	}
 
 	fireTimer = FIRE_COOLDOWN;
-	health = maxHealth;
+	health = MAX_HEALTH;
 
 	if (sheet->frames) {
 		collBoxSize = { static_cast<float>(sheet->frames[0].source.w), static_cast<float>(sheet->frames[0].source.h) };
@@ -37,29 +37,30 @@ void Player::load(const TextureAtlas& atlas) {
 	}
 }
 
-void Player::update(const GameContext& ctx) {
+void Player::update(GameContext& ctx) {
 	constexpr float hSpeed = 128.0f;
 	constexpr float gravity = hSpeed * 4.0f;
 	constexpr float jumpSpeed = hSpeed * 1.75f;
 
-	fireTimer += ctx.delta;
+	if (ctx.input->a.clicked())
+		jumpBuffer = 0.0f;
 
-	if (ctx.input->right && health > 0) {
+	if (ctx.input->right) {
 		facingLeft = false;
 		velocity.x = hSpeed;
-	} else if (ctx.input->left && health > 0) {
+	} else if (ctx.input->left) {
 		facingLeft = true;
 		velocity.x = -hSpeed;
 	} else velocity.x = 0.0f;
 
-	if (ctx.input->b && health > 0)
-	{
+	if (ctx.input->b) {
 		if (fireTimer >= FIRE_COOLDOWN) {
 			for (int i = 0; i < NUM_ATTACKS; i++) {
 				if (!projectiles[i].active) {
-					// Check if player is facing a certain direction to make sure projectiles update at current velocities
-					if (!facingLeft) projectiles[i].spawn(pos.x, pos.y - 15.0f, false);
-					else if (facingLeft) projectiles[i].spawn(pos.x, pos.y - 15.0f, true);
+					constexpr float PROJECTILE_SPEED = 150.0f;
+					animator.start(AS_ATTACK, *sheet);
+					if (!facingLeft) projectiles[i].spawn(pos.x + 4, pos.y - 15.0f, PROJECTILE_SPEED, 0.0f);
+					else if (facingLeft) projectiles[i].spawn(pos.x - 4, pos.y - 15.0f, -PROJECTILE_SPEED, 0.0f);
 					break;
 				}
 			}
@@ -69,26 +70,39 @@ void Player::update(const GameContext& ctx) {
 	}
 	
 	// update projectiles
-	for (int i = 0; i < NUM_ATTACKS; i++) {
+	for (int i = 0; i < NUM_ATTACKS; i++)
 		projectiles[i].update(ctx);
-	}
 
 	// apply gravity
 	velocity.y += gravity * ctx.delta;
 
-	if (isGrounded && ctx.input->a.clicked() && health > 0)
-		velocity.y = -jumpSpeed;
+	if (isGrounded)
+		coyoteTimer = 0.0f;
 
-	if (!isGrounded && velocity.y < 0.0f && !ctx.input->a && health > 0) {
+	if (coyoteTimer <= COYOTE_LIMIT || isGrounded) {
+		if (jumpBuffer <= JUMPBUF_LIMIT) {
+			velocity.y = -jumpSpeed;
+			coyoteTimer += COYOTE_LIMIT;
+		}
+	}
+
+	if (!isGrounded && velocity.y < 0.0f && !ctx.input->a)
 		velocity.y /= 4.0f;
+
+	coyoteTimer += ctx.delta;
+	fireTimer += ctx.delta;
+	jumpBuffer += ctx.delta;
+
+	if (animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData)) {
+		switch (animator.animIdx) {
+		case AS_ATTACK:
+			animator.start(AS_IDLE, *sheet);
+			break;
+		}
 	}
 
 	move_with_collision(ctx);
-
-	if (health > 0) animator.update(ctx.delta, *ctx.atlas->subTextures[animator.spriteIdx].sheetData);
 }
-
-constexpr SDL_FColor FCOL_WHITE = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 void Player::render(Gfx& gfx) {
 	gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y),

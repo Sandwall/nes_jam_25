@@ -256,6 +256,7 @@ void SpriteAnimator::init(uint32_t sprite) {
 	spriteIdx = sprite;
 	timer = 0.0f;
 	animIdx = 0;
+	prevAnimIdx = 0;
 	currentFrame = 0;
 	pingpongForward = true;
 }
@@ -289,7 +290,7 @@ bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 			currentFrame++;
 			if (currentFrame > cAnimMeta.endFrame) {
 				currentFrame = cAnimMeta.startFrame;
-				animationHasReset = !justStarted;
+				animationHasReset = true;
 			} else if (currentFrame < cAnimMeta.startFrame)
 				currentFrame = cAnimMeta.startFrame;
 		} break;
@@ -297,7 +298,7 @@ bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 			currentFrame--;
 			if (currentFrame < cAnimMeta.startFrame) {
 				currentFrame = cAnimMeta.endFrame;
-				animationHasReset = !justStarted;
+				animationHasReset = true;
 			} else if (currentFrame > cAnimMeta.endFrame)
 				currentFrame = cAnimMeta.endFrame;
 		} break;
@@ -306,7 +307,7 @@ bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 				currentFrame++;
 				if (currentFrame > cAnimMeta.endFrame) {
 					currentFrame = cAnimMeta.endFrame;
-					animationHasReset = !justStarted;
+					animationHasReset = true;
 					pingpongForward = false;
 				} else if (currentFrame < cAnimMeta.startFrame)
 					currentFrame = cAnimMeta.startFrame;
@@ -314,7 +315,7 @@ bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 				currentFrame--;
 				if (currentFrame < cAnimMeta.startFrame) {
 					currentFrame = cAnimMeta.startFrame;
-					animationHasReset = !justStarted;
+					animationHasReset = true;
 					pingpongForward = true;
 				} else if (currentFrame > cAnimMeta.endFrame)
 					currentFrame = cAnimMeta.endFrame;
@@ -322,8 +323,6 @@ bool SpriteAnimator::update(float delta, const SpriteSheet& sheet) {
 		} break;
 		}
 	}
-
-	prevAnimIdx = animIdx;
 
 	return animationHasReset;
 }

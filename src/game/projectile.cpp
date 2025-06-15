@@ -7,27 +7,24 @@
 
 #include "game/world.h"
 
-void Projectile::spawn(float x, float y, bool reverseProjectile_) {
+void Projectile::spawn(float x, float y, float vx, float vy) {
 	pos = SDL_FPoint(x, y);
 	active = true;
 	lifeTimer = 0.0f;
-	velocity = { 100.0f, 0.0f };
+	velocity = { vx, vy };
 	origin = { 8.0f, 8.0f };
-
-	reverseProjectile = reverseProjectile_;
 }
 
-void Projectile::load(const struct TextureAtlas& atlas) {
+void Projectile::load(const TextureAtlas& atlas) {
 	animator.init(atlas.find_sprite("projectile1"));
 	sheet = atlas.subTextures[animator.spriteIdx].sheetData;
 	assert(sheet);
 
-	velocity = { 0.0f, 0.0f };
 	lifeTimer = LIFETIME + 1.0f;
 	active = false;
 }
 
-void Projectile::update(const struct GameContext& ctx) {
+void Projectile::update(GameContext& ctx) {
 	if (active) {
 		lifeTimer += ctx.delta;
 
@@ -36,9 +33,6 @@ void Projectile::update(const struct GameContext& ctx) {
 			return;
 		}
 
-		if (!reverseProjectile) velocity.x = 100.0f; // Move to right for testing
-		else if (reverseProjectile) velocity.x = -100.0f; // Move to left for testing
-
 		// apply velocity to position
 		pos.x += velocity.x * ctx.delta;
 		pos.y += velocity.y * ctx.delta;
@@ -46,12 +40,11 @@ void Projectile::update(const struct GameContext& ctx) {
 	}
 }
 
-void Projectile::render(struct Gfx& gfx) {
+void Projectile::render(Gfx& gfx) {
 	if (active) {
-		gfx.queue_sprite(static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y), animator.spriteIdx, animator.current_frame(*sheet));
-	}
-
-	if (!active) {
-		int i = 0;
+		gfx.queue_sprite(
+			static_cast<int>(pos.x - origin.x), static_cast<int>(pos.y - origin.y),
+			animator.spriteIdx, animator.current_frame(*sheet), true, FCOL_WHITE,
+			velocity.x < 0.0f);
 	}
 }

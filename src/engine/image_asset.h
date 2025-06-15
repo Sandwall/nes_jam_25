@@ -89,6 +89,7 @@ struct SpriteSheet {
 struct SpriteAnimator {
 	// this is the offset in the TextureAtlas for both SubTexture and SpriteSheet
 	uint32_t spriteIdx;
+
 	int animIdx;
 
 	// internal
