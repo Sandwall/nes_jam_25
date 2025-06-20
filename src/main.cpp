@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 	GameContext::init();
 
 	// create window and init graphics
-	game.window = SDL_CreateWindow("NES Game!", windowWidth, windowHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+	game.window = SDL_CreateWindow("Mage Game", windowWidth, windowHeight, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
 	SDL_SetWindowMinimumSize(game.window, Gfx::nesWidth, Gfx::nesHeight);
 	if (!gfx.init(game.window))
 		return -1;
@@ -101,44 +101,30 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// Check if the player is in main menu
-		if (inMainMenu)
-		{
-			if (input.start.clicked())
-			{
-				input.start.down = false; // Prevents pausing the game immediately
-				input.start.prevDown = true; // Set start to its previous key/button press
+		if (inMainMenu) {
+			mainMenuTimer += game.delta;
 
-				inMainMenu = false; // Switch to game state and out of main menu
+			if (input.start.clicked()) {
+				input.start.down = false; // Prevents pausing the game immediately
+				input.start.prevDown = false;
+
+				inMainMenu = false;
 			}
 
 			gfx.begin_frame();
 
-			mainMenuTimer += game.delta;
 
-			// Render game title text
-			gfx.queue_text(Gfx::nesWidth / 2.8, Gfx::nesHeight / 8, "NES Game!");
+			gfx.queue_text(Gfx::nesWidth / 2.8, Gfx::nesHeight / 8, "Mage Game!");
 
 			if (mainMenuTimer <= 0.5f)
-			{
-				// Render press start text
 				gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!", SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f));
-			}
-
-			else if (mainMenuTimer > 0.5f)
-			{
-				// Render press start text
-				gfx.queue_text(Gfx::nesWidth / 5, Gfx::nesHeight / 2, "Press Start to play!", SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f));
-
-				if (mainMenuTimer > 0.8f) mainMenuTimer = 0.0f; // Reset main menu timer to 0
-			}
+			else if (mainMenuTimer > 0.8f)
+				mainMenuTimer = 0.0f;
 
 			gfx.finish_frame();
 		}
 
-		// Otherwise, check if the player is playing the game
-		else
-		{
+		else {
 			if (input.start.clicked())
 				paused = !paused;
 

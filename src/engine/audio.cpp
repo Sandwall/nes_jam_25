@@ -4,8 +4,8 @@
 
 #include <SDL3/SDL_audio.h>
 
-nes::NSF songs[3];
-nes::APU apu;
+//nes::NSF songs[3];
+//nes::APU apu;
 
 SDL_AudioStream* mainStream;
 
@@ -33,7 +33,7 @@ void audio_callback(void* userdata, SDL_AudioStream* stream, int additional_amou
 
 
 void audio_init() {
-	songs[0].load("./res/test.nsf");
+	//songs[0].load("./res/test.nsf");
 	const SDL_AudioSpec aSpec = {
 		.format = SDL_AUDIO_F32,
 		.channels = 1,
@@ -49,6 +49,6 @@ void audio_tick() {
 }
 
 void audio_close() {
-	songs[0].cleanup();
+	//songs[0].cleanup();
 	SDL_DestroyAudioStream(mainStream);
 }
